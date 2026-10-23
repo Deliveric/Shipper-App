@@ -4,6 +4,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,9 +32,17 @@ jobs:
         run: dart run flutter_launcher_icons
       - name: Build release APK
         run: flutter build apk --release --build-number=${{ github.run_number }}
-      - name: Rename APK with build number
-        run: cp build/app/outputs/flutter-apk/app-release.apk Deliveric-Shipper-b${{ github.run_number }}.apk
+      - name: Name the output
+        run: cp build/app/outputs/flutter-apk/app-release.apk "Deliveric Shipper build ${{ github.run_number }}.apk"
+      - name: Verify APK signature
+        run: $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner verify --verbose "Deliveric Shipper build ${{ github.run_number }}.apk"
       - uses: actions/upload-artifact@v4
         with:
-          name: Deliveric-Shipper-b${{ github.run_number }}
-          path: Deliveric-Shipper-b${{ github.run_number }}.apk
+          name: Deliveric Shipper build ${{ github.run_number }}
+          path: Deliveric Shipper build ${{ github.run_number }}.apk
+      - name: Publish release (direct .apk download)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "build-${{ github.run_number }}" "Deliveric Shipper build ${{ github.run_number }}.apk" \
+            --title "Deliveric Shipper build ${{ github.run_number }}" --notes "Install the .apk directly."
