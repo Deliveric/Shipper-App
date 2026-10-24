@@ -26,9 +26,12 @@ class _LoginScreenState extends State<LoginScreen> {
       final r = await Api.post('login.php', {
         'phone': _user.text.trim(),
         'password': _pass.text,
+        'type': 'android',
+        'platform_info': 'model:android,UUID:shipper-deliveric,version:android,serial:unknown,app_version:2.1.5',
+        'app_version': '2.1.5',
       });
       final m = r is Map ? r : {};
-      final data = m['data'] is Map ? m['data'] as Map : m;
+      final data = m['token'] != null ? m : (m['data'] is Map ? m['data'] as Map : m);
       final token = Api.pick(data, ['token', 'access_token', 'api_token']);
       if (token.isEmpty) throw ApiException(Api.pick(m, ['message', 'msg'], 'Login failed'));
       await Session.I.save(

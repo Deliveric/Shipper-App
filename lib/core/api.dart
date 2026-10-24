@@ -35,6 +35,10 @@ class Api {
     if (body is Map && (body['status'] == false || body['success'] == false)) {
       throw ApiException('${body['message'] ?? body['msg'] ?? 'Request failed'}');
     }
+    if (body is Map && body['errors'] is List && (body['errors'] as List).isNotEmpty) {
+      final e = (body['errors'] as List).first;
+      throw ApiException(e is Map ? '${e['message'] ?? e['code']}' : '$e');
+    }
     return body;
   }
 
@@ -48,9 +52,12 @@ class Api {
     return _decode(await http.get(uri, headers: _headers).timeout(const Duration(seconds: 30)));
   }
 
-  static Future<dynamic> post(String path, Map<String, String> body) async {
+  /// The original app posts JSON bodies (Content-Type application/json).
+  static Future<dynamic> post(String path, Map<String, dynamic> body) async {
     return _decode(await http
-        .post(Uri.parse('$base$path'), headers: _headers, body: body)
+        .post(Uri.parse('$base$path'),
+            headers: {..._headers, 'Content-Type': 'application/json; charset=utf-8'},
+            body: jsonEncode(body))
         .timeout(const Duration(seconds: 30)));
   }
 
