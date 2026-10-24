@@ -18,7 +18,7 @@ class ShipperApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: Session.I,
       builder: (_, __) => MaterialApp(
-        title: 'Deliveric',
+        title: 'Shipper Deliveric',
         debugShowCheckedModeBanner: false,
         locale: Session.I.locale,
         supportedLocales: const [Locale('en'), Locale('ar')],

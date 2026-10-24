@@ -54,7 +54,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Image.asset('assets/image/icon.png', height: 34),
+        title: const Text('Shipper Deliveric'),
       ),
       body: Column(
         children: [

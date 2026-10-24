@@ -26,23 +26,23 @@ jobs:
         run: |
           M=android/app/src/main/AndroidManifest.xml
           sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <application#' $M
-          sed -i 's#android:label="[^"]*"#android:label="Deliveric"#' $M
+          sed -i 's#android:label="[^"]*"#android:label="Shipper Deliveric"#' $M
       - run: flutter pub get
       - name: Launcher icons
         run: dart run flutter_launcher_icons
       - name: Build release APK
         run: flutter build apk --release --build-number=${{ github.run_number }}
       - name: Name the output
-        run: cp build/app/outputs/flutter-apk/app-release.apk "Deliveric Shipper build ${{ github.run_number }}.apk"
+        run: cp build/app/outputs/flutter-apk/app-release.apk "Shipper Deliveric build ${{ github.run_number }}.apk"
       - name: Verify APK signature
-        run: $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner verify --verbose "Deliveric Shipper build ${{ github.run_number }}.apk"
+        run: $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner verify --verbose "Shipper Deliveric build ${{ github.run_number }}.apk"
       - uses: actions/upload-artifact@v4
         with:
-          name: Deliveric Shipper build ${{ github.run_number }}
-          path: Deliveric Shipper build ${{ github.run_number }}.apk
+          name: Shipper Deliveric build ${{ github.run_number }}
+          path: Shipper Deliveric build ${{ github.run_number }}.apk
       - name: Publish release (direct .apk download)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "build-${{ github.run_number }}" "Deliveric Shipper build ${{ github.run_number }}.apk" \
-            --title "Deliveric Shipper build ${{ github.run_number }}" --notes "Install the .apk directly."
+          gh release create "build-${{ github.run_number }}" "Shipper Deliveric build ${{ github.run_number }}.apk" \
+            --title "Shipper Deliveric build ${{ github.run_number }}" --notes "Install the .apk directly."
