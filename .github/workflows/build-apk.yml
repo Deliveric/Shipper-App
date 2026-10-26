@@ -40,9 +40,19 @@ jobs:
         with:
           name: Shipper Deliveric build ${{ github.run_number }}
           path: Shipper Deliveric build ${{ github.run_number }}.apk
+      - name: Build web version
+        run: |
+          flutter create --org com.deliveric --project-name shipper_app --platforms=web .
+          flutter build web --release
+          mkdir -p web-pkg/web && cp -r build/web/. web-pkg/web/ && cp server.js Dockerfile render.yaml web-pkg/
+          (cd build/web && zip -qr "../../Shipper Deliveric web build ${{ github.run_number }}.zip" .)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Shipper Deliveric web build ${{ github.run_number }}
+          path: Shipper Deliveric web build ${{ github.run_number }}.zip
       - name: Publish release (direct .apk download)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "build-${{ github.run_number }}" "Shipper Deliveric build ${{ github.run_number }}.apk" \
-            --title "Shipper Deliveric build ${{ github.run_number }}" --notes "Install the .apk directly."
+          gh release create "build-${{ github.run_number }}" "Shipper Deliveric build ${{ github.run_number }}.apk" "Shipper Deliveric web build ${{ github.run_number }}.zip" \
+            --title "Shipper Deliveric build ${{ github.run_number }}" --notes "APK for Android + web build (host with Render using the repo Dockerfile)."
