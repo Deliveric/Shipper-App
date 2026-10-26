@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'session.dart';
 
@@ -12,7 +13,9 @@ class ApiException implements Exception {
 /// Thin client for https://deliveric.net/api_v2/*.php (same backend as the
 /// original shipper app 2.1.5).
 class Api {
-  static const base = 'https://deliveric.net/api_v2/';
+  /// On the web build, calls go to the same origin; server.js proxies /api_v2 to
+  /// deliveric.net (browsers block direct calls because of CORS).
+  static String get base => kIsWeb ? '${Uri.base.origin}/api_v2/' : 'https://deliveric.net/api_v2/';
   static const mediaBase = 'https://deliveric.net/';
 
   static Map<String, String> get _headers => {

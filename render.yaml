@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: shipper-deliveric
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz

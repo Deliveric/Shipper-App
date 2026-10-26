@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/session.dart';
@@ -17,7 +18,7 @@ class DelivericHttpOverrides extends HttpOverrides {
 }
 
 Future<void> main() async {
-  HttpOverrides.global = DelivericHttpOverrides();
+  if (!kIsWeb) HttpOverrides.global = DelivericHttpOverrides();
   WidgetsFlutterBinding.ensureInitialized();
   await Session.I.load();
   runApp(const ShipperApp());
