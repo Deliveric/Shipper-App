@@ -64,7 +64,7 @@ class _PortalWebState extends State<PortalWeb> {
       return;
     }
     try {
-      final doc = _f.contentWindow!.document as html.Document;
+      final doc = (_f.contentWindow as dynamic).document as html.HtmlDocument;
       final m = doc.createElement('meta')..setAttribute('name', 'viewport')..setAttribute('content', 'width=device-width, initial-scale=1');
       doc.head!.append(m);
       final s = doc.createElement('style')..text = widget.css;
