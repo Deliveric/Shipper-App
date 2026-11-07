@@ -25,7 +25,7 @@ ThemeData buildTheme(bool arabic) => ThemeData(
         surface: Brand.dark,
       ),
       scaffoldBackgroundColor: Brand.dark,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: Brand.card,
         elevation: 0,
         margin: const EdgeInsets.only(bottom: 10),
