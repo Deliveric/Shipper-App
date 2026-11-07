@@ -44,8 +44,31 @@ jobs:
         run: |
           flutter create --org com.deliveric --project-name shipper_app --platforms=web .
           flutter build web --release
-          mkdir -p web-pkg/web && cp -r build/web/. web-pkg/web/ && cp server.js Dockerfile render.yaml web-pkg/
           (cd build/web && zip -qr "../../Shipper Deliveric web build ${{ github.run_number }}.zip" .)
+      - name: Publish static site to the "web" branch (for Render Static Site)
+        run: |
+          cd build/web
+          cat > render.yaml <<'Y'
+          services:
+            - type: web
+              name: shipper-deliveric
+              runtime: static
+              staticPublishPath: .
+              routes:
+                - type: rewrite
+                  source: /api_v2/*
+                  destination: https://deliveric.net/api_v2/*
+                - type: rewrite
+                  source: /*
+                  destination: /index.html
+          Y
+          sed -i 's/^          //' render.yaml
+          git init -q -b web
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add -A
+          git commit -q -m "Web build ${{ github.run_number }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" web
       - uses: actions/upload-artifact@v4
         with:
           name: Shipper Deliveric web build ${{ github.run_number }}
@@ -55,4 +78,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "build-${{ github.run_number }}" "Shipper Deliveric build ${{ github.run_number }}.apk" "Shipper Deliveric web build ${{ github.run_number }}.zip" \
-            --title "Shipper Deliveric build ${{ github.run_number }}" --notes "APK for Android + web build (host with Render using the repo Dockerfile)."
+            --title "Shipper Deliveric build ${{ github.run_number }}" --notes "APK for Android + web build. The web branch holds the static site for Render."
