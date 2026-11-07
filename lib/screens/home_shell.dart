@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/strings.dart';
 import '../core/theme.dart';
-import 'accounts_screen.dart';
 import 'home_screen.dart';
 import 'reports_screen.dart';
 import 'settings_screen.dart';
@@ -15,20 +14,29 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _i = 2;
+  final _built = <int>{2};
 
-  void goTo(int i) => setState(() => _i = i);
+  void goTo(int i) => setState(() {
+        _i = i;
+        _built.add(i);
+      });
 
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      const PortalScreen(
-        title: 'Shipments',
-        url: 'https://deliveric.net/admin-area/shipper_view_shipments.php',
-      ),
-      const AccountsScreen(),
-      HomeScreen(onTab: goTo),
-      const ReportsScreen(),
-      const SettingsScreen(),
+    final pages = <Widget Function()>[
+      () => const PortalScreen(
+            title: 'Shipments',
+            kind: 'shipments',
+            url: 'https://deliveric.net/admin-area/shipper_view_shipments.php',
+          ),
+      () => const PortalScreen(
+            title: 'Wallet',
+            kind: 'wallet',
+            url: 'https://deliveric.net/admin-area/balance.php',
+          ),
+      () => HomeScreen(onTab: goTo),
+      () => const ReportsScreen(),
+      () => const SettingsScreen(),
     ];
     final items = [
       (Icons.inventory_2_outlined, Icons.inventory_2, 'shipments'),
@@ -39,7 +47,9 @@ class _HomeShellState extends State<HomeShell> {
     ];
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(index: _i, children: pages),
+      body: IndexedStack(index: _i, children: [
+        for (var n = 0; n < pages.length; n++) _built.contains(n) ? pages[n]() : const SizedBox.shrink(),
+      ]),
       bottomNavigationBar: SafeArea(
         child: Container(
           margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),

@@ -27,6 +27,10 @@ jobs:
           M=android/app/src/main/AndroidManifest.xml
           sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <application#' $M
           sed -i 's#android:label="[^"]*"#android:label="Shipper Deliveric"#' $M
+      - name: minSdk 23 (secure storage)
+        run: |
+          sed -i -E 's/minSdk(Version)?( |=)+flutter\.minSdkVersion/minSdk = 23/' android/app/build.gradle* || true
+          sed -i -E 's/minSdkVersion +flutter\.minSdkVersion/minSdkVersion 23/' android/app/build.gradle* || true
       - run: flutter pub get
       - name: Launcher icons
         run: dart run flutter_launcher_icons
