@@ -5,7 +5,7 @@ import 'accounts_screen.dart';
 import 'home_screen.dart';
 import 'reports_screen.dart';
 import 'settings_screen.dart';
-import 'shipments_screen.dart';
+import 'portal_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -21,7 +21,10 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      const ShipmentsScreen(),
+      const PortalScreen(
+        title: 'Shipments',
+        url: 'https://deliveric.net/admin-area/shipper_view_shipments.php',
+      ),
       const AccountsScreen(),
       HomeScreen(onTab: goTo),
       const ReportsScreen(),
