@@ -11,11 +11,11 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final ar = Session.I.locale.languageCode == 'ar';
     return Scaffold(
-      appBar: AppBar(title: Text(tr(context, 'settings'))),
+      appBar: AppBar(title: Text(tr(context, 'profile'))),
       body: ListView(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 110),
         children: [
-          Center(child: Image.asset('assets/image/logo.png', height: 110)),
+          Center(child: ClipOval(child: Image.asset('assets/image/logo.png', height: 110))),
           if ((Session.I.userName ?? '').isNotEmpty)
             Center(
               child: Text(Session.I.userName!,

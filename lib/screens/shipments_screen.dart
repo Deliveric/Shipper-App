@@ -100,7 +100,9 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
         label: Text(label),
         selected: on,
         selectedColor: Brand.orange,
-        labelStyle: TextStyle(color: on ? Colors.white : Brand.dark),
+        labelStyle: TextStyle(color: on ? Brand.dark : Brand.muted, fontWeight: on ? FontWeight.w600 : FontWeight.w400),
+        backgroundColor: Brand.card,
+        side: BorderSide.none,
         onSelected: (_) {
           _status = value;
           _load();
@@ -131,7 +133,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
       color: Brand.orange,
       onRefresh: _load,
       child: ListView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 110),
         itemCount: _items.length,
         itemBuilder: (_, i) => _card(_items[i]),
       ),

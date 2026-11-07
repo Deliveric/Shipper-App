@@ -1,32 +1,46 @@
 import 'package:flutter/material.dart';
 
 class Brand {
-  static const orange = Color(0xFFFF9900);
-  static const dark = Color(0xFF232323);
-  static const bg = Color(0xFFF6F6F6);
-  static const green = Color(0xFF2E9E5B);
-  static const red = Color(0xFFD64545);
+  static const orange = Color(0xFFE2964E);
+  static const orangeLight = Color(0xFFF2B27A);
+  static const orangeDeep = Color(0xFFC8742A);
+  static const dark = Color(0xFF1B1B17);
+  static const card = Color(0xFF26261F);
+  static const card2 = Color(0xFF33332A);
+  static const text = Color(0xFFF4EFE8);
+  static const muted = Color(0xFFA9A395);
+  static const bg = dark;
+  static const green = Color(0xFF6FDC94);
+  static const red = Color(0xFFFF8C82);
 }
 
 ThemeData buildTheme(bool arabic) => ThemeData(
       useMaterial3: true,
+      brightness: Brightness.dark,
       fontFamily: arabic ? 'Cairo' : 'Ubuntu',
       colorScheme: ColorScheme.fromSeed(
         seedColor: Brand.orange,
+        brightness: Brightness.dark,
         primary: Brand.orange,
-        secondary: Brand.dark,
+        surface: Brand.dark,
       ),
-      scaffoldBackgroundColor: Brand.bg,
+      scaffoldBackgroundColor: Brand.dark,
+      cardTheme: CardTheme(
+        color: Brand.card,
+        elevation: 0,
+        margin: const EdgeInsets.only(bottom: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Brand.dark,
-        foregroundColor: Colors.white,
+        foregroundColor: Brand.text,
         centerTitle: true,
         elevation: 0,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: Brand.orange,
-          foregroundColor: Colors.white,
+          foregroundColor: Brand.dark,
           minimumSize: const Size.fromHeight(50),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
@@ -34,7 +48,8 @@ ThemeData buildTheme(bool arabic) => ThemeData(
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Brand.card,
+        hintStyle: const TextStyle(color: Brand.muted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

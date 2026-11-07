@@ -43,7 +43,7 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(14),
         children: [
-          Center(child: Image.asset('assets/image/logo.png', height: 90)),
+          Center(child: ClipOval(child: Image.asset('assets/image/logo.png', height: 90))),
           _row(tr(context, 'status'), Api.pick(s, ['status_name', 'status'])),
           _row(tr(context, 'customer'), Api.pick(s, ['client_name', 'customer_name', 'name'])),
           _row(tr(context, 'address'), Api.pick(s, ['address', 'client_address', 'city'])),
@@ -77,8 +77,8 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
       ? const SizedBox.shrink()
       : Card(
           child: ListTile(
-            title: Text(k, style: const TextStyle(color: Colors.black54, fontSize: 13)),
-            subtitle: Text(v, style: const TextStyle(color: Brand.dark, fontSize: 16)),
+            title: Text(k, style: const TextStyle(color: Brand.muted, fontSize: 13)),
+            subtitle: Text(v, style: const TextStyle(color: Brand.text, fontSize: 16)),
           ),
         );
 }

@@ -51,14 +51,14 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Brand.dark,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                Image.asset('assets/image/logo.png', width: 220),
+                ClipOval(child: Image.asset('assets/image/logo.png', width: 200)),
                 const SizedBox(height: 16),
                 TextField(
                   controller: _user,
@@ -92,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? const SizedBox(
                           width: 22,
                           height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Brand.dark),
                         )
                       : Text(tr(context, 'login')),
                 ),

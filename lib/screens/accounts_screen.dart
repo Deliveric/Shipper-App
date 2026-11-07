@@ -40,14 +40,14 @@ class _AccountsScreenState extends State<AccountsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(tr(context, 'accounts'))),
+      appBar: AppBar(title: Text(tr(context, 'wallet'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: Brand.orange))
           : RefreshIndicator(
               color: Brand.orange,
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 110),
                 children: [
                   Container(
                     padding: const EdgeInsets.all(20),
