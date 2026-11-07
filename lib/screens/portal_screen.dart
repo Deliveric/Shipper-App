@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../core/session.dart';
 import '../core/theme.dart';
+import 'portal_web_stub.dart' if (dart.library.html) 'portal_web_impl.dart';
 
 const _loginUrl = 'https://deliveric.net/admin-area/login.php';
 
@@ -201,23 +202,18 @@ class _PortalScreenState extends State<PortalScreen> {
   @override
   Widget build(BuildContext context) {
     if (kIsWeb) {
+      final u = Uri.parse(widget.url);
+      final css = _baseCss +
+          (widget.kind == 'shipments' ? _shipmentsCss : '') +
+          (widget.kind == 'wallet' ? _walletCss : '');
       return Scaffold(
         appBar: AppBar(title: Text(widget.title)),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              ClipOval(child: Image.asset('assets/image/logo.png', width: 120)),
-              const SizedBox(height: 16),
-              const Text('This page opens inside the Android app.\nOn the web it opens in a new tab.',
-                  textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => launchUrl(Uri.parse(widget.url), webOnlyWindowName: '_blank'),
-                child: Text('Open ${widget.title.toLowerCase()}'),
-              ),
-            ]),
-          ),
+        body: PortalWeb(
+          path: u.path + (u.hasQuery ? '?${u.query}' : ''),
+          css: css,
+          js: widget.kind == 'wallet' ? _walletJs : '',
+          user: Session.I.portalUser ?? '',
+          pass: Session.I.portalPass ?? '',
         ),
       );
     }
