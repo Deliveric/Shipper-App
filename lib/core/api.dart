@@ -85,6 +85,27 @@ class Api {
     return [];
   }
 
+  /// Raw server reply as text (used by the debug screen).
+  static Future<String> raw(String path, [Map<String, String>? q]) async {
+    final uri = Uri.parse('$base$path').replace(queryParameters: q);
+    final r = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 30));
+    return 'HTTP ${r.statusCode}\n${utf8.decode(r.bodyBytes)}';
+  }
+
+  // ---- field names taken from the original app's models ----
+  static String code(Map s) => pick(s, ['waybill', 'order_id', 'id']);
+  static String name(Map s) => pick(s, ['client_name']);
+  static String phone(Map s) => pick(s, ['phone_1', 'phone_2']);
+  static String cod(Map s) => pick(s, ['costing'], '0');
+  static String area(Map s) => pick(s, ['sector_name', 'address']);
+  static String status(Map s) {
+    final ar = Session.I.locale.languageCode == 'ar';
+    return ar
+        ? pick(s, ['status_ar', 'status_en', 'status'])
+        : pick(s, ['status_en', 'status_ar', 'status']);
+  }
+  static double num(String v) => double.tryParse(v.replaceAll(RegExp(r'[^0-9.\-]'), '')) ?? 0;
+
   static String pick(Map m, List<String> keys, [String fallback = '']) {
     for (final k in keys) {
       final v = m[k];

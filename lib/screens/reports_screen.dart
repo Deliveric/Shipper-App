@@ -21,10 +21,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   Future<void> _load() async {
     try {
-      final r = await Api.get('my_shipments.php', {'page': '1'});
+      final r = await Api.get('my_shipments.php', {'page': '1', 'limit': '1000'});
       final c = <String, int>{};
       for (final s in Api.listOf(r)) {
-        final st = Api.pick(s, ['status_name', 'status', 'general_status'], '-');
+        final st = Api.status(s).isEmpty ? '-' : Api.status(s);
         c[st] = (c[st] ?? 0) + 1;
       }
       if (mounted) setState(() => _counts..clear()..addAll(c));

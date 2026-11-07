@@ -29,12 +29,12 @@ class _HomeScreenState extends State<HomeScreen> {
       final b = await Api.get('getShipperBalance.php');
       final bd = b is Map ? (b['data'] is Map ? b['data'] : b) : {};
       final w = _num(Api.pick(bd, ['balance', 'amount', 'total'], '0'));
-      final r = await Api.get('my_shipments.php', {'page': '1'});
+      final r = await Api.get('my_shipments.php', {'page': '1', 'limit': '1000'});
       final list = Api.listOf(r);
       double out = 0, del = 0, tot = 0;
       for (final s in list) {
-        final cod = _num(Api.pick(s, ['cod', 'amount', 'total', 'price'], '0'));
-        final st = Api.pick(s, ['status_name', 'status', 'general_status']).toLowerCase();
+        final cod = _num(Api.cod(s));
+        final st = (Api.pick(s, ['status_en']) + ' ' + Api.pick(s, ['status_ar'])).toLowerCase();
         tot += cod;
         if (st.contains('deliver') && !st.contains('out') || st.contains('تسليم') || st.contains('تم')) {
           del += cod;
@@ -164,11 +164,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: const Color(0xFF3A2B17), borderRadius: BorderRadius.circular(12)),
                       child: const Icon(Icons.local_shipping_outlined, color: Brand.orange),
                     ),
-                    title: Text('#${Api.pick(s, ['code', 'tracking', 'shipment_code', 'id'])}',
+                    title: Text('#${Api.code(s)}',
                         style: const TextStyle(fontWeight: FontWeight.w700)),
-                    subtitle: Text(Api.pick(s, ['client_name', 'customer_name', 'name']),
+                    subtitle: Text(Api.name(s),
                         style: const TextStyle(color: Brand.muted)),
-                    trailing: Text(Api.pick(s, ['cod', 'amount', 'total']),
+                    trailing: Text(Api.cod(s),
                         style: const TextStyle(color: Brand.orange, fontWeight: FontWeight.w700)),
                     onTap: () => widget.onTab(0),
                   ),

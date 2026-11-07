@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/session.dart';
 import '../core/strings.dart';
 import '../core/theme.dart';
+import 'debug_screen.dart';
 import 'login_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -28,6 +29,13 @@ class SettingsScreen extends StatelessWidget {
               title: Text(tr(context, 'language')),
               trailing: Text(ar ? 'العربية' : 'English'),
               onTap: () => Session.I.setLang(ar ? 'en' : 'ar'),
+            ),
+          ),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.bug_report_outlined, color: Brand.orange),
+              title: const Text('Server replies (for support)'),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DebugScreen())),
             ),
           ),
           Card(

@@ -39,7 +39,8 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
     try {
       final r = await Api.get('my_shipments.php', {
         'page': '1',
-        if (_status.isNotEmpty) 'general_status': _status,
+        'limit': '100',
+        if (_status.isNotEmpty) 'status_id': _status,
         if (_search.text.trim().isNotEmpty) 'search': _search.text.trim(),
       });
       if (mounted) setState(() => _items = Api.listOf(r));
@@ -81,8 +82,8 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
               children: [
                 _chip(tr(context, 'all'), ''),
                 for (final s in _statuses)
-                  _chip(Api.pick(s, ['name', 'title', 'status_name']),
-                      Api.pick(s, ['key', 'general_status', 'id', 'slug'])),
+                  _chip(Api.pick(s, ['name', 'status_en', 'title', 'status_name']),
+                      Api.pick(s, ['status_id', 'id', 'key'])),
               ],
             ),
           ),
@@ -141,10 +142,10 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
   }
 
   Widget _card(Map<String, dynamic> s) {
-    final code = Api.pick(s, ['code', 'tracking', 'shipment_code', 'id']);
-    final name = Api.pick(s, ['client_name', 'customer_name', 'name', 'receiver_name']);
-    final status = Api.pick(s, ['status_name', 'status', 'general_status']);
-    final cod = Api.pick(s, ['cod', 'amount', 'total', 'price']);
+    final code = Api.code(s);
+    final name = Api.name(s);
+    final status = Api.status(s);
+    final cod = Api.cod(s);
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

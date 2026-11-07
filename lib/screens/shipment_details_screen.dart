@@ -36,7 +36,7 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final phone = Api.pick(s, ['phone', 'client_phone', 'mobile', 'receiver_phone']);
+    final phone = Api.phone(s);
     final wa = phone.replaceAll(RegExp(r'[^0-9]'), '');
     return Scaffold(
       appBar: AppBar(title: Text(tr(context, 'details'))),
@@ -44,10 +44,13 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
         padding: const EdgeInsets.all(14),
         children: [
           Center(child: ClipOval(child: Image.asset('assets/image/logo.png', height: 90))),
-          _row(tr(context, 'status'), Api.pick(s, ['status_name', 'status'])),
-          _row(tr(context, 'customer'), Api.pick(s, ['client_name', 'customer_name', 'name'])),
-          _row(tr(context, 'address'), Api.pick(s, ['address', 'client_address', 'city'])),
-          _row(tr(context, 'cod'), Api.pick(s, ['cod', 'amount', 'total'])),
+          _row(tr(context, 'status'), Api.status(s)),
+          _row(tr(context, 'customer'), Api.name(s)),
+          _row(tr(context, 'address'), Api.pick(s, ['address'])),
+          _row('Area', Api.pick(s, ['sector_name'])),
+          _row('Waybill', Api.code(s)),
+          _row('Product', Api.pick(s, ['product_name'])),
+          _row(tr(context, 'cod'), Api.cod(s)),
           const SizedBox(height: 14),
           if (phone.isNotEmpty)
             Row(children: [
