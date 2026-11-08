@@ -95,7 +95,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
                       _act('Copy waybills', () => _copy(chosen.map((s) => Api.code(s)).join('\n'), '${chosen.length} waybills')),
                       _act('Copy details', () => _copy(chosen.map(_line).join('\n'), '${chosen.length} shipments')),
                       _act('Send on WhatsApp', () {
-                        final text = Uri.encodeComponent(chosen.map((s) => '${Api.code(s)} - ${fmt(Api.num(Api.cod(s)))} EGP').join('\n'));
+                        final text = Uri.encodeComponent(chosen.map((s) => [Api.code(s), Api.area(s), Api.phone(s), Api.name(s)].join('-')).join('\n'));
                         launchUrl(Uri.parse('https://wa.me/?text=$text'), mode: LaunchMode.externalApplication);
                       }),
                     ]),
@@ -200,6 +200,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
               ),
               const SizedBox(height: 6),
               Text([Api.name(s), Api.area(s)].where((e) => e.isNotEmpty).join(' · '), style: const TextStyle(fontSize: 12, color: Brand.muted)),
+              if (Api.pick(s, ['order_id']).isNotEmpty) Text('Order ${Api.pick(s, ['order_id'])}', style: const TextStyle(fontSize: 12, color: Brand.muted)),
             ]),
           ),
         ]),

@@ -108,7 +108,7 @@ class HomeScreen extends StatelessWidget {
                   child: ListTile(
                     onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShipmentDetailsScreen(shipment: s))),
                     title: Text('#${Api.code(s)}', style: const TextStyle(fontWeight: FontWeight.w700)),
-                    subtitle: Text([Api.name(s), Api.status(s)].where((e) => e.isNotEmpty).join('  •  ')),
+                    subtitle: Text([Api.name(s), Api.status(s), if (Api.pick(s, ['order_id']).isNotEmpty) 'Order ${Api.pick(s, ['order_id'])}'].where((e) => e.isNotEmpty).join('  •  ')),
                     trailing: Text('${fmt(Api.num(Api.cod(s)))} EGP', style: const TextStyle(color: Brand.orange, fontWeight: FontWeight.w700)),
                   ),
                 ),

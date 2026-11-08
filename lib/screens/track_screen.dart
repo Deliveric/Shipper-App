@@ -64,7 +64,7 @@ class _TrackScreenState extends State<TrackScreen> {
           Card(
             child: ListTile(
               title: Text(Api.code(s), style: const TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: Text('${Api.name(s)} · ${Api.status(s)}'),
+              subtitle: Text('${Api.name(s)} · ${Api.status(s)}${Api.pick(s, ['order_id']).isEmpty ? '' : '\nOrder ${Api.pick(s, ['order_id'])}'}'),
               trailing: Text('${Api.cod(s)} EGP', style: const TextStyle(color: Brand.orange)),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShipmentDetailsScreen(shipment: s))),
             ),

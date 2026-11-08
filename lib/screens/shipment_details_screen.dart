@@ -56,6 +56,7 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
           _row(tr(context, 'address'), Api.pick(s, ['address'])),
           _row('Area', Api.pick(s, ['sector_name'])),
           _row('Waybill', Api.code(s)),
+          _row('Order ID', Api.pick(s, ['order_id'])),
           _row('Product', Api.pick(s, ['product_name'])),
           _row(tr(context, 'cod'), Api.cod(s)),
           if (_history.isNotEmpty) ...[
