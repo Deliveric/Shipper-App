@@ -63,10 +63,8 @@ class HomeScreen extends StatelessWidget {
               Row(children: [
                 Expanded(child: _box('In operation', '${op.length}', 'shipments')),
                 const SizedBox(width: 10),
-                Expanded(child: _box('All time', fmt(d.allCount), 'shipments · ${fmt(d.allCod)} EGP')),
+                Expanded(child: _box('Pickup requests', '$pickups', 'waiting to be picked up')),
               ]),
-              const SizedBox(height: 10),
-              _box('Pickup requests', '$pickups', 'waiting to be picked up'),
               const SizedBox(height: 14),
               Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
                 _act(Icons.add, tr(context, 'new_shipment'), () => onTab(0)),

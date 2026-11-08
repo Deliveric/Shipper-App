@@ -28,7 +28,6 @@ class ReportsScreen extends StatelessWidget {
         final last7 = [for (var i = 6; i >= 0; i--) today.subtract(Duration(days: i))];
         final counts = last7.map(d.delivered).toList();
         final mx = counts.fold<int>(1, (a, b) => b > a ? b : a);
-        final dmx = d.dashCounts.fold<num>(1, (a, b) => b > a ? b : a);
         return Scaffold(
           appBar: AppBar(title: Text(tr(context, 'stats'))),
           body: RefreshIndicator(
@@ -68,34 +67,6 @@ class ReportsScreen extends StatelessWidget {
                       ),
                   ]),
                 ),
-              ),
-              _sec('All time'),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(16)),
-                child: d.dashLabels.isEmpty
-                    ? const Text('Loading…', style: TextStyle(color: Brand.muted))
-                    : Column(children: [
-                        for (var i = 0; i < d.dashLabels.length; i++)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Row(children: [
-                              SizedBox(width: 110, child: Text(d.dashLabels[i], style: const TextStyle(fontSize: 12))),
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(5),
-                                  child: LinearProgressIndicator(
-                                    value: (d.dashCounts[i] / dmx).toDouble(),
-                                    minHeight: 8,
-                                    backgroundColor: Brand.card2,
-                                    color: Brand.orange,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 60, child: Text(fmt(d.dashCounts[i]), textAlign: TextAlign.end, style: const TextStyle(fontSize: 12))),
-                            ]),
-                          ),
-                      ]),
               ),
             ]),
           ),

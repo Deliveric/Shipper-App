@@ -44,16 +44,6 @@ class _AccountsScreenState extends State<AccountsScreen> {
                 const SizedBox(width: 10),
                 _chip('The Transferable Amount', d.transferable),
               ]),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(16)),
-                child: Column(children: [
-                  _row('COD collected, all time', '${fmt(d.codCollected)} EGP'),
-                  _row('Shipments, all time', fmt(d.allCount)),
-                  _row('COD of all shipments', '${fmt(d.allCod)} EGP'),
-                ]),
-              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(2, 18, 2, 8),
                 child: Text('LATEST TRANSACTIONS', style: const TextStyle(fontSize: 12, color: Brand.muted, letterSpacing: .8)),
@@ -92,7 +82,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
   Widget _tx(BuildContext context, Tx t) {
     final n = t.net;
     final d = t.date;
-    final date = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    final date = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
