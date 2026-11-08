@@ -5,13 +5,21 @@ import 'shipment_details_screen.dart';
 
 /// Scan & track: type or paste a waybill / order number, open its details.
 class TrackScreen extends StatefulWidget {
-  const TrackScreen({super.key});
+  final String initial;
+  const TrackScreen({super.key, this.initial = ''});
   @override
   State<TrackScreen> createState() => _TrackScreenState();
 }
 
 class _TrackScreenState extends State<TrackScreen> {
-  final _c = TextEditingController();
+  late final _c = TextEditingController(text: widget.initial);
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initial.isNotEmpty) WidgetsBinding.instance.addPostFrameCallback((_) => _go());
+  }
+
   bool _busy = false;
   String? _msg;
   List<Map<String, dynamic>> _found = [];
@@ -25,8 +33,34 @@ class _TrackScreenState extends State<TrackScreen> {
       _found = [];
     });
     try {
-      final r = await Api.get('my_shipments.php', {'general_status': 'delivere', 'start': '0', 'limit': '50', 'lang': 'en', 'searchKey': q});
-      final list = Api.listOf(r);
+      var list = <Map<String, dynamic>>[];
+      try {
+        list = Api.listOf(await Api.get('my_shipments.php', {'general_status': 'delivere', 'start': '0', 'limit': '50', 'lang': 'en', 'searchKey': q}));
+      } catch (_) {}
+      if (list.isEmpty) {
+        // not among the open shipments: ask the lookup endpoint of the original app
+        try {
+          final r = await Api.post('scan_shipment.php', {'waybill': q});
+          final found = <Map<String, dynamic>>[];
+          void take(dynamic v) {
+            if (v is Map && (v['waybill'] != null || v['id'] != null)) found.add(Map<String, dynamic>.from(v));
+          }
+          if (r is Map) {
+            for (final k in ['shipment', 'data', 'result']) {
+              final v = r[k];
+              if (v is List) {
+                v.forEach(take);
+              } else {
+                take(v);
+              }
+            }
+            if (found.isEmpty) take(r);
+          } else if (r is List) {
+            r.forEach(take);
+          }
+          list = found;
+        } catch (_) {}
+      }
       setState(() {
         _found = list;
         if (list.isEmpty) _msg = 'No shipment found for "$q"';

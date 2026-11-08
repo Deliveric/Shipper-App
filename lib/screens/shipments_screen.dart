@@ -7,6 +7,7 @@ import '../core/strings.dart';
 import '../core/theme.dart';
 import '../core/util.dart';
 import 'shipment_details_screen.dart';
+import 'track_screen.dart';
 
 class ShipmentsScreen extends StatefulWidget {
   const ShipmentsScreen({super.key});
@@ -113,7 +114,16 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
               if (!AppData.I.loading && view.isEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 40),
-                  child: Column(children: [Image.asset('assets/image/empty_box.png', width: 120), Text(tr(context, 'empty'))]),
+                  child: Column(children: [
+                    Image.asset('assets/image/empty_box.png', width: 120),
+                    Text(tr(context, 'empty')),
+                    if (_search.text.trim().isNotEmpty)
+                      TextButton.icon(
+                        icon: const Icon(Icons.search),
+                        label: Text('Search all shipments for "${_search.text.trim()}"'),
+                        onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => TrackScreen(initial: _search.text.trim()))),
+                      ),
+                  ]),
                 ),
               for (final s in view) _card(s),
             ]),
