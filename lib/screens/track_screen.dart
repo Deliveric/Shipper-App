@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/api.dart';
 import '../core/copy_button.dart';
+import '../core/strings.dart';
 import '../core/theme.dart';
 import 'shipment_details_screen.dart';
 
@@ -64,7 +65,7 @@ class _TrackScreenState extends State<TrackScreen> {
       }
       setState(() {
         _found = list;
-        if (list.isEmpty) _msg = 'No shipment found for "$q"';
+        if (list.isEmpty) _msg = '${tl('No shipment found for')} "$q"';
       });
       if (list.length == 1 && mounted) {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShipmentDetailsScreen(shipment: list.first)));
@@ -79,7 +80,7 @@ class _TrackScreenState extends State<TrackScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan & track')),
+      appBar: AppBar(title: Text(tl('Scan & track'))),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         TextField(
           controller: _c,
@@ -87,7 +88,7 @@ class _TrackScreenState extends State<TrackScreen> {
           textInputAction: TextInputAction.search,
           onSubmitted: (_) => _go(),
           decoration: InputDecoration(
-            hintText: 'Waybill or order number',
+            hintText: tl('Waybill or order number'),
             prefixIcon: const Icon(Icons.qr_code_scanner),
             suffixIcon: IconButton(icon: const Icon(Icons.search), onPressed: _go),
           ),
@@ -99,8 +100,8 @@ class _TrackScreenState extends State<TrackScreen> {
           Card(
             child: ListTile(
               title: Row(children: [Flexible(child: Text(Api.code(s), style: const TextStyle(fontWeight: FontWeight.w700))), CopyButton(Api.code(s))]),
-              subtitle: Text('${Api.name(s)} · ${Api.status(s)}${Api.pick(s, ['order_id']).isEmpty ? '' : '\nOrder ${Api.pick(s, ['order_id'])}'}'),
-              trailing: Text('${Api.cod(s)} EGP', style: const TextStyle(color: Brand.orange)),
+              subtitle: Text('${Api.name(s)} · ${Api.status(s)}${Api.pick(s, ['order_id']).isEmpty ? '' : '\n${tl('Order')} ${Api.pick(s, ['order_id'])}'}'),
+              trailing: Text('${Api.cod(s)} ${tl('EGP')}', style: const TextStyle(color: Brand.orange)),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShipmentDetailsScreen(shipment: s))),
             ),
           ),

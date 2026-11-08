@@ -21,9 +21,9 @@ class ReportsScreen extends StatelessWidget {
         final weekStart = today.subtract(Duration(days: (now.weekday + 1) % 7)); // weeks start on Saturday
         final monthStart = DateTime(now.year, now.month, 1);
         final periods = [
-          ('Today', '${today.day}/${today.month}', today),
-          ('This week', 'from ${weekStart.day}/${weekStart.month}', weekStart),
-          ('This month', 'from 1/${now.month}', monthStart),
+          (tl('Today'), '${today.day}/${today.month}', today),
+          (tl('This week'), '${tl('from')} ${weekStart.day}/${weekStart.month}', weekStart),
+          (tl('This month'), '${tl('from')} 1/${now.month}', monthStart),
         ];
         final last7 = [for (var i = 6; i >= 0; i--) today.subtract(Duration(days: i))];
         final counts = last7.map(d.delivered).toList();
@@ -35,22 +35,21 @@ class ReportsScreen extends StatelessWidget {
             onRefresh: d.refresh,
             child: ListView(padding: const EdgeInsets.fromLTRB(14, 6, 14, 110), children: [
               if (d.loading) const LinearProgressIndicator(color: Brand.orange, minHeight: 3),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(2, 6, 2, 10),
-                child: Text('Delivered shipments. A delivery counts on the day it is paid into your account. Weeks start on Saturday.',
-                    style: TextStyle(color: Brand.muted, fontSize: 12)),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(2, 6, 2, 10),
+                child: Text(tl('Delivered shipments. A delivery counts on the day it is paid into your account. Weeks start on Saturday.'),
+                    style: const TextStyle(color: Brand.muted, fontSize: 12)),
               ),
               for (final p in periods) ...[
                 _period(p.$1, p.$2, d.period(p.$3)),
                 const SizedBox(height: 10),
               ],
-              _sec('Last 7 days'),
+              _sec(tl('Last 7 days')),
               Padding(
                 padding: const EdgeInsets.fromLTRB(2, 0, 2, 8),
                 child: Text(
-                  'Delivered shipments per day, ending today. Each bar is the number of shipments delivered that day, '
-                  'counted on the day the delivery was recorded in your account. Today is still in progress, so its bar keeps growing. '
-                  'Total: ${counts.fold<int>(0, (a, b) => a + b)} delivered, average ${(counts.fold<int>(0, (a, b) => a + b) / 7).toStringAsFixed(0)} a day.',
+                  '${tl('Delivered shipments per day, ending today. Each bar is the number of shipments delivered that day, counted on the day the delivery was recorded in your account. Today is still in progress, so its bar keeps growing.')} '
+                  '${tl('Total')}: ${counts.fold<int>(0, (a, b) => a + b)}, ${tl('average')} ${(counts.fold<int>(0, (a, b) => a + b) / 7).toStringAsFixed(0)} ${tl('a day')}.',
                   style: const TextStyle(color: Brand.muted, fontSize: 12, height: 1.4),
                 ),
               ),
@@ -71,7 +70,7 @@ class ReportsScreen extends StatelessWidget {
                             decoration: const BoxDecoration(color: Brand.orange, borderRadius: BorderRadius.vertical(top: Radius.circular(6))),
                           ),
                           const SizedBox(height: 4),
-                          Text(_days[last7[i].weekday - 1], style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
+                          Text(tl(_days[last7[i].weekday - 1]), style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
                         ]),
                       ),
                   ]),
@@ -101,15 +100,15 @@ class ReportsScreen extends StatelessWidget {
           Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Text('${p.delivered}', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Brand.orange)),
             const SizedBox(width: 6),
-            const Padding(padding: EdgeInsets.only(bottom: 6), child: Text('delivered', style: TextStyle(color: Brand.muted, fontSize: 13))),
+            Padding(padding: const EdgeInsets.only(bottom: 6), child: Text(tl('delivered'), style: TextStyle(color: Brand.muted, fontSize: 13))),
           ]),
           const SizedBox(height: 10),
           Row(children: [
-            _mini('COD collected', fmt(p.cod)),
+            _mini(tl('COD collected'), fmt(p.cod)),
             const SizedBox(width: 8),
-            _mini('Shipping fees', fmt(p.fees)),
+            _mini(tl('Shipping fees'), fmt(p.fees)),
             const SizedBox(width: 8),
-            _mini('Returned', '${p.returned}'),
+            _mini(tl('Returned'), '${p.returned}'),
           ]),
         ]),
       );

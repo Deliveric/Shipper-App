@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/api.dart';
 import '../core/data.dart';
+import '../core/strings.dart';
 import '../core/theme.dart';
 import 'shipment_details_screen.dart';
 
@@ -62,7 +63,7 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
                 TextField(
                   autofocus: true,
                   onChanged: (v) => set(() => q = v),
-                  decoration: const InputDecoration(hintText: 'Search area', prefixIcon: Icon(Icons.search)),
+                  decoration: InputDecoration(hintText: tl('Search area'), prefixIcon: Icon(Icons.search)),
                 ),
                 const SizedBox(height: 8),
                 Expanded(
@@ -128,7 +129,7 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
       }
       await AppData.I.refresh();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(wb.isEmpty ? 'Shipment created' : 'Shipment created $wb')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(wb.isEmpty ? tl('Shipment created') : '${tl('Shipment created')} $wb')));
       if (id.isEmpty && wb.isNotEmpty) {
         // find it in the refreshed list
         for (final x in AppData.I.shipments) {
@@ -157,15 +158,15 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
           controller: c,
           keyboardType: kt,
           maxLines: lines,
-          validator: req ? (v) => (v == null || v.trim().isEmpty) ? 'Required' : null : null,
-          decoration: InputDecoration(hintText: hint + (req ? ' *' : '')),
+          validator: req ? (v) => (v == null || v.trim().isEmpty) ? tl('Required') : null : null,
+          decoration: InputDecoration(hintText: tl(hint) + (req ? ' *' : '')),
         ),
       );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('New shipment')),
+      appBar: AppBar(title: Text(tl('New shipment'))),
       body: Form(
         key: _f,
         child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 40), children: [
@@ -174,7 +175,7 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
           _field('Second phone', _p2, kt: TextInputType.phone),
           _field('Address', _addr, req: true, lines: 2),
           FormField<String>(
-            validator: (_) => _sector == null ? 'Required' : null,
+            validator: (_) => _sector == null ? tl('Required') : null,
             builder: (st) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               InkWell(
                 borderRadius: BorderRadius.circular(14),
@@ -188,14 +189,14 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
                 child: InputDecorator(
                   decoration: InputDecoration(prefixIcon: const Icon(Icons.search), errorText: st.errorText),
                   child: Text(
-                    _sector != null ? _areaLabel(_sectors.firstWhere((e) => '${e['id']}' == _sector)) : (!_loaded ? 'Loading areas…' : (_sectors.isEmpty ? 'No areas returned' : 'Area * (tap to search)')),
+                    _sector != null ? _areaLabel(_sectors.firstWhere((e) => '${e['id']}' == _sector)) : (!_loaded ? tl('Loading areas…') : (_sectors.isEmpty ? tl('No areas returned') : tl('Area * (tap to search)'))),
                     style: TextStyle(color: _sector != null ? Brand.text : Brand.muted),
                   ),
                 ),
               ),
             ]),
           ),
-          if (_cost.isNotEmpty) Padding(padding: const EdgeInsets.only(bottom: 12, left: 4), child: Text('Shipping cost: $_cost EGP', style: const TextStyle(color: Brand.orange))),
+          if (_cost.isNotEmpty) Padding(padding: const EdgeInsets.only(bottom: 12, left: 4), child: Text('${tl('Shipping cost')}: $_cost ${tl('EGP')}', style: const TextStyle(color: Brand.orange))),
           const SizedBox(height: 8),
           if (_types.isNotEmpty)
             Padding(
@@ -203,7 +204,7 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
               child: DropdownButtonFormField<String>(
                 isExpanded: true,
                 value: _type,
-                hint: const Text('Service type'),
+                hint: Text(tl('Service type')),
                 items: [for (final t in _types) DropdownMenuItem(value: '${t['id']}', child: Text('${t['name']}'))],
                 onChanged: (v) => setState(() => _type = v),
               ),
@@ -220,7 +221,7 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
           if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(_error!, style: const TextStyle(color: Brand.red))),
           ElevatedButton(
             onPressed: _busy ? null : _submit,
-            child: _busy ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Brand.dark)) : const Text('Create shipment'),
+            child: _busy ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Brand.dark)) : Text(tl('Create shipment')),
           ),
         ]),
       ),

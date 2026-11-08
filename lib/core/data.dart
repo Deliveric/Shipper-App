@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'api.dart';
 import 'session.dart';
+import 'strings.dart';
 import 'util.dart';
 
 class Tx {
@@ -24,7 +25,7 @@ class Tx {
   bool get isPayout => type == '10' || type == '30';
   bool get isDelivery => type == '70';
   bool get isReturn => type == '80' || type == '152';
-  String get label => const {
+  String get label => tl(const {
         '70': 'Delivered',
         '80': 'Returned',
         '152': 'Partial / replacement',
@@ -33,7 +34,7 @@ class Tx {
         '60': 'Extra services',
         '151': 'Overweight',
       }[type] ??
-      'Other';
+      'Other');
 
   /// money that moves on your account because of this row
   num get net => isPayout ? -value : (type == '60' || type == '151' ? value : value - fee);

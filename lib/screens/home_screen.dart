@@ -51,31 +51,31 @@ class HomeScreen extends StatelessWidget {
                   Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
                     Text(fmt(d.inOperationCod), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: Brand.dark)),
                     const SizedBox(width: 6),
-                    const Padding(padding: EdgeInsets.only(bottom: 6), child: Text('EGP', style: TextStyle(color: Color(0xBF1B1B17)))),
+                    Padding(padding: const EdgeInsets.only(bottom: 6), child: Text(tl('EGP'), style: TextStyle(color: Color(0xBF1B1B17)))),
                   ]),
                   const SizedBox(height: 12),
                   Row(children: [
-                    _chip('Net Deserved', d.net, outlined: true),
+                    _chip(tl('Net Deserved'), d.net, outlined: true),
                     const SizedBox(width: 10),
-                    _chip('The Transferable Amount', d.transferable),
+                    _chip(tl('The Transferable Amount'), d.transferable),
                   ]),
                 ]),
               ),
               const SizedBox(height: 12),
               Row(children: [
-                Expanded(child: _box('In operation', '${op.length}', 'shipments')),
+                Expanded(child: _box(tl('In operation'), '${op.length}', tl('shipments'))),
                 const SizedBox(width: 10),
-                Expanded(child: _box('Pickup requests', '$pickups', 'waiting to be picked up')),
+                Expanded(child: _box(tl('Pickup requests'), '$pickups', tl('waiting to be picked up'))),
               ]),
               const SizedBox(height: 14),
               Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
                 _act(Icons.add, tr(context, 'new_shipment'), () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NewShipmentScreen()))),
                 _act(Icons.qr_code_scanner, tr(context, 'scan_track'), () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TrackScreen()))),
                 _act(Icons.local_shipping_outlined, tr(context, 'request_pickup'), () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Coming soon')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tl('Coming soon'))));
                 }),
               ]),
-              _sec('In operation by status'),
+              _sec(tl('In operation by status')),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(16)),
@@ -101,15 +101,15 @@ class HomeScreen extends StatelessWidget {
                   ]),
                 ]),
               ),
-              _sec('Newest shipments'),
+              _sec(tl('Newest shipments')),
               for (final s in d.shipments.take(3))
                 Card(
                   margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShipmentDetailsScreen(shipment: s))),
                     title: Row(children: [Flexible(child: Text(Api.code(s), style: const TextStyle(fontWeight: FontWeight.w700))), CopyButton(Api.code(s))]),
-                    subtitle: Text([Api.name(s), Api.status(s), if (Api.pick(s, ['order_id']).isNotEmpty) 'Order ${Api.pick(s, ['order_id'])}'].where((e) => e.isNotEmpty).join('  •  ')),
-                    trailing: Text('${fmt(Api.num(Api.cod(s)))} EGP', style: const TextStyle(color: Brand.orange, fontWeight: FontWeight.w700)),
+                    subtitle: Text([Api.name(s), Api.status(s), if (Api.pick(s, ['order_id']).isNotEmpty) '${tl('Order')} ${Api.pick(s, ['order_id'])}'].where((e) => e.isNotEmpty).join('  •  ')),
+                    trailing: Text('${fmt(Api.num(Api.cod(s)))} ${tl('EGP')}', style: const TextStyle(color: Brand.orange, fontWeight: FontWeight.w700)),
                   ),
                 ),
               if (d.error != null && d.shipments.isEmpty)

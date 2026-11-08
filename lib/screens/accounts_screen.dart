@@ -40,13 +40,13 @@ class _AccountsScreenState extends State<AccountsScreen> {
               if (d.loading) const LinearProgressIndicator(color: Brand.orange, minHeight: 3),
               const SizedBox(height: 6),
               Row(children: [
-                _chip('Net Deserved', d.net, outlined: true),
+                _chip(tl('Net Deserved'), d.net, outlined: true),
                 const SizedBox(width: 10),
-                _chip('The Transferable Amount', d.transferable),
+                _chip(tl('The Transferable Amount'), d.transferable),
               ]),
               Padding(
                 padding: const EdgeInsets.fromLTRB(2, 18, 2, 8),
-                child: Text('LATEST TRANSACTIONS', style: const TextStyle(fontSize: 12, color: Brand.muted, letterSpacing: .8)),
+                child: Text(tl('LATEST TRANSACTIONS'), style: const TextStyle(fontSize: 12, color: Brand.muted, letterSpacing: .8)),
               ),
               SizedBox(
                 height: 44,
@@ -55,7 +55,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                     Padding(
                       padding: const EdgeInsets.only(right: 8, top: 4, bottom: 4),
                       child: ChoiceChip(
-                        label: Text(n),
+                        label: Text(tl(n)),
                         selected: _f == n,
                         selectedColor: Brand.orange,
                         labelStyle: TextStyle(fontSize: 12, color: _f == n ? Brand.dark : Brand.muted),
@@ -69,7 +69,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
               if (tx.isEmpty)
                 Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Center(child: Text(d.loading ? 'Loading transactions…' : tr(context, 'empty'), style: const TextStyle(color: Brand.muted))),
+                  child: Center(child: Text(d.loading ? tl('Loading transactions…') : tr(context, 'empty'), style: const TextStyle(color: Brand.muted))),
                 ),
               for (final t in tx) _tx(context, t),
             ]),
@@ -93,26 +93,26 @@ class _AccountsScreenState extends State<AccountsScreen> {
           builder: (_) => Padding(
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(t.isPayout ? '${t.label} to you' : t.waybill, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+              Text(t.isPayout ? '${t.label} ${tl('to you')}' : t.waybill, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
               const SizedBox(height: 6),
-              _row('Type', t.label),
-              _row('Date', date),
-              _row('Amount', '${fmt(t.value)} EGP'),
+              _row(tl('Type'), t.label),
+              _row(tl('Date'), date),
+              _row(tl('Amount'), '${fmt(t.value)} ${tl('EGP')}'),
               if (!t.isPayout && t.type != '60' && t.type != '151') ...[
-                _row('Shipping fee', '${fmt(t.fee)} EGP'),
-                _row('Commission', '${fmt(t.commission)} EGP'),
-                _row('Net to you', '${fmt(t.value - t.fee)} EGP'),
+                _row(tl('Shipping fee'), '${fmt(t.fee)} ${tl('EGP')}'),
+                _row(tl('Commission'), '${fmt(t.commission)} ${tl('EGP')}'),
+                _row(tl('Net to you'), '${fmt(t.value - t.fee)} ${tl('EGP')}'),
               ],
-              _row('Payment report', t.report > 0 ? '#${t.report}' : 'not paid yet'),
-              _row('Transaction id', '${t.id}'),
+              _row(tl('Payment report'), t.report > 0 ? '#${t.report}' : tl('not paid yet')),
+              _row(tl('Transaction id'), '${t.id}'),
             ]),
           ),
         ),
-        title: Text(t.isPayout ? '${t.label} to you' : (t.waybill.isEmpty ? t.label : t.waybill), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+        title: Text(t.isPayout ? '${t.label} ${tl('to you')}' : (t.waybill.isEmpty ? t.label : t.waybill), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
         subtitle: Text('${t.label} · $date', style: const TextStyle(fontSize: 11.5)),
         trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Text('${n < 0 ? '-' : '+'}${fmt(n.abs())} EGP', style: TextStyle(color: n < 0 ? Brand.red : Brand.green, fontWeight: FontWeight.w700)),
-          Text(t.isPayout ? 'payout' : 'COD ${fmt(t.value)} · fee ${fmt(t.fee)}', style: const TextStyle(fontSize: 11, color: Brand.muted)),
+          Text('${n < 0 ? '-' : '+'}${fmt(n.abs())} ${tl('EGP')}', style: TextStyle(color: n < 0 ? Brand.red : Brand.green, fontWeight: FontWeight.w700)),
+          Text(t.isPayout ? tl('payout') : 'COD ${fmt(t.value)} · ${tl('Shipping fee')} ${fmt(t.fee)}', style: const TextStyle(fontSize: 11, color: Brand.muted)),
         ]),
       ),
     );
