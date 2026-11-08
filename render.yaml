@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: shipper-deliveric
+    runtime: static
+    staticPublishPath: .
+    routes:
+      - type: rewrite
+        source: /api_v2/*
+        destination: https://deliveric.net/api_v2/*
+      - type: rewrite
+        source: /admin-area/*
+        destination: https://deliveric.net/admin-area/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
