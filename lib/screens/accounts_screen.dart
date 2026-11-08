@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import '../core/api.dart';
+import '../core/data.dart';
 import '../core/strings.dart';
 import '../core/theme.dart';
+import '../core/util.dart';
 
+/// Wallet tab: Net Deserved, The Transferable Amount, details and latest transactions.
 class AccountsScreen extends StatefulWidget {
   const AccountsScreen({super.key});
   @override
@@ -10,78 +12,143 @@ class AccountsScreen extends StatefulWidget {
 }
 
 class _AccountsScreenState extends State<AccountsScreen> {
-  String _balance = '-';
-  List<Map<String, dynamic>> _tx = [];
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final b = await Api.get('getShipperBalance.php');
-      final t = await Api.get('my_transactions.php');
-      if (!mounted) return;
-      setState(() {
-        _balance = b is Map
-            ? Api.pick(b['data'] is Map ? b['data'] : b, ['balance', 'amount', 'total'], '-')
-            : '$b';
-        _tx = Api.listOf(t);
-      });
-    } catch (_) {
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
+  String _f = 'All';
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(tr(context, 'wallet'))),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Brand.orange))
-          : RefreshIndicator(
-              color: Brand.orange,
-              onRefresh: _load,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(14, 14, 14, 110),
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Brand.dark,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(children: [
-                      Image.asset('assets/image/income.png', width: 44),
-                      const SizedBox(width: 14),
-                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(tr(context, 'balance'), style: const TextStyle(color: Colors.white70)),
-                        Text(_balance,
-                            style: const TextStyle(
-                                color: Brand.orange, fontSize: 28, fontWeight: FontWeight.w700)),
-                      ]),
-                    ]),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(tr(context, 'transactions'),
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                  const SizedBox(height: 8),
-                  for (final t in _tx)
-                    Card(
-                      child: ListTile(
-                        title: Text(Api.pick(t, ['title', 'type', 'note', 'description', 'id'])),
-                        subtitle: Text(Api.pick(t, ['date', 'created_at'])),
-                        trailing: Text(Api.pick(t, ['amount', 'total']),
-                            style: const TextStyle(fontWeight: FontWeight.w700)),
+    return ListenableBuilder(
+      listenable: AppData.I,
+      builder: (context, _) {
+        final d = AppData.I;
+        final tx = d.tx.where((t) {
+          switch (_f) {
+            case 'Delivered':
+              return t.isDelivery;
+            case 'Returns':
+              return t.isReturn;
+            case 'Payouts':
+              return t.isPayout;
+          }
+          return true;
+        }).take(25).toList();
+        return Scaffold(
+          appBar: AppBar(title: Text(tr(context, 'wallet'))),
+          body: RefreshIndicator(
+            color: Brand.orange,
+            onRefresh: d.refresh,
+            child: ListView(padding: const EdgeInsets.fromLTRB(14, 6, 14, 110), children: [
+              if (d.loading) const LinearProgressIndicator(color: Brand.orange, minHeight: 3),
+              const SizedBox(height: 6),
+              Row(children: [
+                _chip('Net Deserved', d.net, outlined: true),
+                const SizedBox(width: 10),
+                _chip('The Transferable Amount', d.transferable),
+              ]),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(16)),
+                child: Column(children: [
+                  _row('COD collected, all time', '${fmt(d.codCollected)} EGP'),
+                  _row('Shipments, all time', fmt(d.allCount)),
+                  _row('COD of all shipments', '${fmt(d.allCod)} EGP'),
+                ]),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(2, 18, 2, 8),
+                child: Text('LATEST TRANSACTIONS', style: const TextStyle(fontSize: 12, color: Brand.muted, letterSpacing: .8)),
+              ),
+              SizedBox(
+                height: 44,
+                child: ListView(scrollDirection: Axis.horizontal, children: [
+                  for (final n in ['All', 'Delivered', 'Returns', 'Payouts'])
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8, top: 4, bottom: 4),
+                      child: ChoiceChip(
+                        label: Text(n),
+                        selected: _f == n,
+                        selectedColor: Brand.orange,
+                        labelStyle: TextStyle(fontSize: 12, color: _f == n ? Brand.dark : Brand.muted),
+                        backgroundColor: Brand.card,
+                        side: BorderSide.none,
+                        onSelected: (_) => setState(() => _f = n),
                       ),
                     ),
-                ],
+                ]),
               ),
-            ),
+              if (tx.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Center(child: Text(d.loading ? 'Loading transactions…' : tr(context, 'empty'), style: const TextStyle(color: Brand.muted))),
+                ),
+              for (final t in tx) _tx(context, t),
+            ]),
+          ),
+        );
+      },
     );
   }
+
+  Widget _tx(BuildContext context, Tx t) {
+    final n = t.net;
+    final d = t.date;
+    final date = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        onTap: () => showModalBottomSheet(
+          context: context,
+          backgroundColor: Brand.card,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+          builder: (_) => Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(t.isPayout ? '${t.label} to you' : t.waybill, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 6),
+              _row('Type', t.label),
+              _row('Date', date),
+              _row('Amount', '${fmt(t.value)} EGP'),
+              if (!t.isPayout && t.type != '60' && t.type != '151') ...[
+                _row('Shipping fee', '${fmt(t.fee)} EGP'),
+                _row('Commission', '${fmt(t.commission)} EGP'),
+                _row('Net to you', '${fmt(t.value - t.fee)} EGP'),
+              ],
+              _row('Payment report', t.report > 0 ? '#${t.report}' : 'not paid yet'),
+              _row('Transaction id', '${t.id}'),
+            ]),
+          ),
+        ),
+        title: Text(t.isPayout ? '${t.label} to you' : (t.waybill.isEmpty ? t.label : t.waybill), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+        subtitle: Text('${t.label} · $date', style: const TextStyle(fontSize: 11.5)),
+        trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Text('${n < 0 ? '-' : '+'}${fmt(n.abs())} EGP', style: TextStyle(color: n < 0 ? Brand.red : Brand.green, fontWeight: FontWeight.w700)),
+          Text(t.isPayout ? 'payout' : 'COD ${fmt(t.value)} · fee ${fmt(t.fee)}', style: const TextStyle(fontSize: 11, color: Brand.muted)),
+        ]),
+      ),
+    );
+  }
+
+  Widget _row(String k, String v) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text(k, style: const TextStyle(color: Brand.muted, fontSize: 13)),
+          Flexible(child: Text(v, textAlign: TextAlign.end, style: const TextStyle(fontSize: 13))),
+        ]),
+      );
+
+  Widget _chip(String label, num v, {bool outlined = false}) => Expanded(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+          decoration: BoxDecoration(
+            color: outlined ? Brand.dark : Brand.orange,
+            borderRadius: BorderRadius.circular(18),
+            border: outlined ? Border.all(color: Brand.orange, width: 1.5) : null,
+          ),
+          child: Column(children: [
+            Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: outlined ? Brand.muted : const Color(0xFF3B2A14))),
+            const SizedBox(height: 4),
+            Text(fmt(v), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: outlined ? Brand.orange : Brand.dark)),
+          ]),
+        ),
+      );
 }

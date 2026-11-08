@@ -13,6 +13,7 @@ class ShipmentDetailsScreen extends StatefulWidget {
 
 class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
   late Map<String, dynamic> s = widget.shipment;
+  List<Map> _history = [];
 
   @override
   void initState() {
@@ -24,9 +25,15 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
     final id = Api.pick(s, ['id', 'shipment_id']);
     if (id.isEmpty) return;
     try {
-      final r = await Api.get('shipment.php', {'id': id});
-      final d = r is Map ? (r['data'] is Map ? r['data'] : r) : null;
-      if (d is Map && mounted) setState(() => s = {...s, ...Map<String, dynamic>.from(d)});
+      final r = await Api.post('shipment.php', {'id': id, 'app': 'shipper'});
+      final d = r is Map ? r['shipment'] : null;
+      if (d is Map && mounted) {
+        setState(() {
+          s = {...s, ...Map<String, dynamic>.from(d)};
+          final h = d['historyStatus'];
+          _history = h is List ? h.whereType<Map>().toList() : [];
+        });
+      }
     } catch (_) {}
   }
 
@@ -51,6 +58,17 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
           _row('Waybill', Api.code(s)),
           _row('Product', Api.pick(s, ['product_name'])),
           _row(tr(context, 'cod'), Api.cod(s)),
+          if (_history.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Text(tr(context, 'history'), style: const TextStyle(color: Brand.muted)),
+            for (final h in _history.reversed)
+              ListTile(
+                dense: true,
+                leading: const Icon(Icons.circle, size: 10, color: Brand.orange),
+                title: Text(Api.pick(h, ['status', 'status_lang'])),
+                subtitle: Text(Api.pick(h, ['date_added'])),
+              ),
+          ],
           const SizedBox(height: 14),
           if (phone.isNotEmpty)
             Row(children: [

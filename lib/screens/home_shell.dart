@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import '../core/data.dart';
 import '../core/strings.dart';
 import '../core/theme.dart';
+import 'accounts_screen.dart';
 import 'home_screen.dart';
 import 'reports_screen.dart';
 import 'settings_screen.dart';
-import 'portal_screen.dart';
+import 'shipments_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -14,42 +16,34 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _i = 2;
-  final _built = <int>{2};
 
-  void goTo(int i) => setState(() {
-        _i = i;
-        _built.add(i);
-      });
+  @override
+  void initState() {
+    super.initState();
+    AppData.I.refresh();
+  }
+
+  void goTo(int i) => setState(() => _i = i);
 
   @override
   Widget build(BuildContext context) {
-    final pages = <Widget Function()>[
-      () => const PortalScreen(
-            title: 'Shipments',
-            kind: 'shipments',
-            url: 'https://deliveric.net/admin-area/shipper_view_shipments.php',
-          ),
-      () => const PortalScreen(
-            title: 'Wallet',
-            kind: 'wallet',
-            url: 'https://deliveric.net/admin-area/balance.php',
-          ),
-      () => HomeScreen(onTab: goTo),
-      () => const ReportsScreen(),
-      () => const SettingsScreen(),
+    final pages = <Widget>[
+      const ShipmentsScreen(),
+      const AccountsScreen(),
+      HomeScreen(onTab: goTo),
+      const ReportsScreen(),
+      const SettingsScreen(),
     ];
     final items = [
       (Icons.inventory_2_outlined, Icons.inventory_2, 'shipments'),
       (Icons.account_balance_wallet_outlined, Icons.account_balance_wallet, 'wallet'),
       (Icons.home_outlined, Icons.home_rounded, 'home'),
-      (Icons.bar_chart_outlined, Icons.bar_chart_rounded, 'reports'),
+      (Icons.bar_chart_outlined, Icons.bar_chart_rounded, 'stats'),
       (Icons.person_outline, Icons.person, 'profile'),
     ];
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(index: _i, children: [
-        for (var n = 0; n < pages.length; n++) _built.contains(n) ? pages[n]() : const SizedBox.shrink(),
-      ]),
+      body: IndexedStack(index: _i, children: pages),
       bottomNavigationBar: SafeArea(
         child: Container(
           margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
@@ -69,20 +63,15 @@ class _HomeShellState extends State<HomeShell> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(_i == n ? items[n].$2 : items[n].$1,
-                            color: _i == n ? Brand.orange : Brand.muted, size: 26),
+                        Icon(_i == n ? items[n].$2 : items[n].$1, color: _i == n ? Brand.orange : Brand.muted, size: 26),
                         const SizedBox(height: 2),
-                        Text(tr(context, items[n].$3),
-                            style: TextStyle(
-                                fontSize: 10.5,
-                                color: _i == n ? Brand.orange : Brand.muted)),
+                        Text(tr(context, items[n].$3), style: TextStyle(fontSize: 10.5, color: _i == n ? Brand.orange : Brand.muted)),
                         const SizedBox(height: 3),
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           height: 3,
                           width: _i == n ? 26 : 0,
-                          decoration: BoxDecoration(
-                              color: Brand.orange, borderRadius: BorderRadius.circular(3)),
+                          decoration: BoxDecoration(color: Brand.orange, borderRadius: BorderRadius.circular(3)),
                         ),
                       ],
                     ),

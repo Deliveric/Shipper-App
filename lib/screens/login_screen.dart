@@ -39,7 +39,6 @@ class _LoginScreenState extends State<LoginScreen> {
         userId: Api.pick(data, ['id', 'user_id']),
         name: Api.pick(data, ['name', 'full_name', 'username']),
       );
-      await Session.I.savePortalLogin(_user.text.trim(), _pass.text);
       if (!mounted) return;
       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomeShell()));
     } catch (e) {
