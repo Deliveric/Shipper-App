@@ -92,7 +92,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
   Widget _tx(BuildContext context, Tx t) {
     final n = t.net;
     final d = t.date;
-    final date = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    final date = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
