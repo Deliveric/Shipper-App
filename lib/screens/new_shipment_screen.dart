@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/api.dart';
 import '../core/data.dart';
 import '../core/theme.dart';
+import 'shipment_details_screen.dart';
 
 /// New shipment: posts the same fields the website form uses to create_shipment.php.
 class NewShipmentScreen extends StatefulWidget {
@@ -104,7 +105,7 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
         'address': _addr.text.trim(),
         'sector_id': _sector,
         'product_name': _prod.text.trim(),
-        'price': _cod.text.trim().isEmpty ? '0' : _cod.text.trim(),
+        'price': _cod.text.trim(),
         'order_id': _order.text.trim(),
         'notes': _notes.text.trim(),
         'weight': _weight.text.trim(),
@@ -112,11 +113,37 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
         if (_type != null) 'service_type': _type,
       });
       if (!mounted) return;
-      final wb = r is Map ? Api.pick(r, ['waybill', 'message']) : '';
+      String id = '', wb = '';
+      Map<String, dynamic> shipment = {};
+      if (r is Map) {
+        for (final k in ['shipment', 'data', 'result']) {
+          if (r[k] is Map) {
+            shipment = Map<String, dynamic>.from(r[k] as Map);
+            break;
+          }
+        }
+        id = Api.pick(shipment.isNotEmpty ? shipment : r, ['id', 'shipment_id', 'shipping_id']);
+        if (id.isEmpty) id = Api.pick(r, ['id', 'shipment_id', 'shipping_id']);
+        wb = Api.pick(shipment.isNotEmpty ? shipment : r, ['waybill']);
+      }
       await AppData.I.refresh();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(wb.isEmpty ? 'Shipment created' : 'Shipment created $wb')));
-      Navigator.of(context).pop();
+      if (id.isEmpty && wb.isNotEmpty) {
+        // find it in the refreshed list
+        for (final x in AppData.I.shipments) {
+          if (Api.pick(x, ['waybill']) == wb) {
+            shipment = x;
+            id = Api.pick(x, ['id']);
+            break;
+          }
+        }
+      }
+      if (id.isNotEmpty) {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => ShipmentDetailsScreen(shipment: {...shipment, 'id': id})));
+      } else {
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       setState(() => _error = '$e');
     } finally {
@@ -182,7 +209,7 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
               ),
             ),
           _field('Product', _prod, req: true),
-          _field('COD amount (EGP)', _cod, kt: TextInputType.number),
+          _field('COD amount (EGP)', _cod, req: true, kt: TextInputType.number),
           _field('Order number', _order),
           Row(children: [
             Expanded(child: _field('Weight (kg)', _weight, kt: TextInputType.number)),

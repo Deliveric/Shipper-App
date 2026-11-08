@@ -67,6 +67,14 @@ jobs:
       - name: Build web version
         run: |
           flutter create --org com.deliveric --project-name shipper_app --platforms=web .
+          pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image
+          im = Image.open('assets/image/logo.png').convert('RGBA')
+          for path, size in [('web/favicon.png', 32), ('web/icons/Icon-192.png', 192), ('web/icons/Icon-512.png', 512), ('web/icons/Icon-maskable-192.png', 192), ('web/icons/Icon-maskable-512.png', 512)]:
+              im.resize((size, size), Image.LANCZOS).save(path)
+          PY
+          sed -i 's#<title>[^<]*</title>#<title>Shipper Deliveric</title>#' web/index.html
           flutter build web --release --dart-define=BUILD=${{ github.run_number }}
           (cd build/web && zip -qr "../../Shipper Deliveric web build ${{ github.run_number }}.zip" .)
       - name: Publish static site to the "web" branch (for Render Static Site)
