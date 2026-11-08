@@ -1,15 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import '../core/api.dart';
 import '../core/download_stub.dart' if (dart.library.html) '../core/download_web.dart';
 import '../core/session.dart';
 import '../core/theme.dart';
 
-/// API recorder: calls every read-only endpoint of the shipper API and builds a
-/// JSON report (request, status, reply) with personal data masked, so an API
-/// document can be written from real examples. Nothing here changes data.
+/// API recorder: calls the read-only endpoints and saves the FULL replies
+/// (nothing masked, nothing shortened) as JSON files you can download.
+/// Only the sign-in token is left out. Nothing here changes data.
 class DebugScreen extends StatefulWidget {
   const DebugScreen({super.key});
   @override
@@ -19,69 +18,102 @@ class DebugScreen extends StatefulWidget {
 class _Call {
   final String path;
   final Map<String, String> q;
-  final Map<String, dynamic>? body; // when set the call is a JSON POST (read-only endpoints only)
-  final bool plain; // reference data (statuses, areas): names are not personal
-  const _Call(this.path, [this.q = const {}, this.body, this.plain = false]);
+  final Map<String, dynamic>? body;
+  const _Call(this.path, [this.q = const {}, this.body]);
+}
+
+class _Part {
+  final String title;
+  final String file;
+  String status = 'waiting';
+  String? json;
+  _Part(this.title, this.file);
 }
 
 class _DebugScreenState extends State<DebugScreen> {
-  static const calls = <_Call>[
+  static const small = <_Call>[
     _Call('user_info.php'),
-    _Call('my_shipments.php', {'general_status': 'delivere', 'start': '0', 'limit': '3', 'lang': 'en'}),
     _Call('my_shipments.php', {'general_status': 'delivere', 'count': '1'}),
-    _Call('my_shipments.php', {'shipper_id': '{UID}', 'status_id': '3', 'general_status': 'delivere', 'lang': 'en'}),
-    _Call('shipment.php', {'id': '{ID}'}),
     _Call('shipment.php', {}, {'id': '{ID}', 'app': 'shipper'}),
-    _Call('shipment_statuses.php', {}, null, true),
-    _Call('get_shipper_filter_statuses.php', {}, null, true),
+    _Call('shipment_statuses.php'),
+    _Call('get_shipper_filter_statuses.php'),
     _Call('statusDashboard.php'),
     _Call('getShipperBalance.php'),
     _Call('transactions_sum.php'),
     _Call('get_withdrawable_amount.php'),
-    _Call('my_transactions.php'),
-    _Call('returned_shipments.php', {'start': '0', 'limit': '3'}),
     _Call('notifications.php'),
     _Call('filterData.php'),
     _Call('get_stores.php'),
-    _Call('sectors.php', {}, null, true),
-    _Call('service_types.php', {}, null, true),
+    _Call('sectors.php'),
+    _Call('service_types.php'),
     _Call('get_reasons.php'),
     _Call('get_company_data.php'),
     _Call('get_whats_templates.php'),
     _Call('get_request_data.php'),
     _Call('get_shippers.php'),
-    _Call('warehouse_shippers.php'),
     _Call('get_task_types.php'),
     _Call('get_tasks.php'),
     _Call('my_chat.php'),
   ];
 
-  final List<Map<String, dynamic>> report = [];
-  bool loading = true;
+  final parts = <_Part>[
+    _Part('Everything except the long lists', 'shipper-api-small.json'),
+    _Part('All shipments', 'shipper-api-shipments.json'),
+    _Part('Returned shipments', 'shipper-api-returned.json'),
+    _Part('All transactions', 'shipper-api-transactions.json'),
+  ];
   String? firstId;
-  String? uid;
+  bool running = true;
 
-  static final _secretKey = RegExp(r'(name|phone|mobile|address|email|token|password|note|comment|shipper|store|client|merchant|account|iban)', caseSensitive: false);
-  static final _longDigits = RegExp(r'\d{9,}');
-  static final _mail = RegExp(r'[\w.+-]+@[\w-]+\.[\w.]+');
+  Map<String, String> get _hdr => {
+        'Accept': 'application/json',
+        if (Session.I.token != null) 'Authorization': 'Bearer ${Session.I.token}',
+        'Accept-Language': Session.I.locale.languageCode,
+      };
 
-  dynamic _mask(dynamic v, [String key = '', bool plain = false]) {
-    if (v is Map) return v.map((k, x) => MapEntry(k, _mask(x, '$k', plain)));
-    if (v is List) {
-      // keep only 3 examples of long lists (the full list can be tens of MB)
-      final out = v.take(3).map((x) => _mask(x, key, plain)).toList();
-      if (v.length > 3) out.add('«${v.length - 3} more items not shown (total ${v.length})»');
-      return out;
-    }
-    if (v is String) {
-      if (plain) return v.replaceAll(_mail, '«email»').replaceAll(_longDigits, '«number»');
-      if (v.isNotEmpty && _secretKey.hasMatch(key) && !RegExp(r'(status|type|count|id$)', caseSensitive: false).hasMatch(key)) {
-        return '«masked»';
+  Uri _uri(String path, Map<String, String> q) =>
+      Uri.parse('${Api.base}$path').replace(queryParameters: q.isEmpty ? null : q);
+
+  String _shown(Uri u) => u.toString().replaceAll(Uri.base.origin, 'https://deliveric.net');
+
+  Future<http.Response> _get(Uri u, {Map<String, dynamic>? body}) async {
+    Object? err;
+    for (var i = 0; i < 3; i++) {
+      try {
+        final h = {..._hdr, if (body != null) 'Content-Type': 'application/json; charset=utf-8'};
+        final f = body == null ? http.get(u, headers: h) : http.post(u, headers: h, body: jsonEncode(body));
+        return await f.timeout(const Duration(minutes: 5));
+      } catch (e) {
+        err = e;
+        await Future.delayed(const Duration(seconds: 2));
       }
-      return v.replaceAll(_mail, '«email»').replaceAll(_longDigits, '«number»');
     }
-    return v;
+    throw err!;
   }
+
+  bool _isJson(String s) {
+    final t = s.trimLeft();
+    return t.startsWith('{') || t.startsWith('[');
+  }
+
+  /// one entry of the report; the reply text is spliced in unchanged
+  String _entry(String method, Uri u, Map<String, dynamic>? body, http.Response r, int ms) {
+    final text = utf8.decode(r.bodyBytes);
+    final meta = {
+      'method': method,
+      'url': _shown(u),
+      if (body != null) 'request_body': body,
+      'status': r.statusCode,
+      'content_type': r.headers['content-type'],
+      'ms': ms,
+    };
+    final m = jsonEncode(meta);
+    final resp = _isJson(text) ? text : jsonEncode(text);
+    return '${m.substring(0, m.length - 1)},"response":$resp}';
+  }
+
+  String _wrap(List<String> entries) =>
+      '{"base_url":"https://deliveric.net/api_v2/","recorded_at":"${DateTime.now().toIso8601String()}","calls":[${entries.join(',')}]}';
 
   @override
   void initState() {
@@ -90,131 +122,126 @@ class _DebugScreenState extends State<DebugScreen> {
   }
 
   Future<void> _run() async {
-    for (final c in calls) {
-      final q = Map<String, String>.from(c.q);
-      Map<String, dynamic>? body = c.body == null ? null : Map<String, dynamic>.from(c.body!);
-      String? sub(String v) => v == '{ID}' ? firstId : (v == '{UID}' ? uid : v);
-      var skip = false;
-      q.updateAll((k, v) {
-        final r = sub(v);
-        if (r == null) skip = true;
-        return r ?? v;
-      });
-      body?.updateAll((k, v) {
-        final r = v is String ? sub(v) : v;
-        if (r == null) skip = true;
-        return r ?? v;
-      });
-      if (skip) continue;
-      final uri = Uri.parse('${Api.base}${c.path}').replace(queryParameters: q.isEmpty ? null : q);
-      final entry = <String, dynamic>{
-        'method': body == null ? 'GET' : 'POST',
-        if (body != null) 'request_body': body,
-        'url': uri.toString().replaceAll(Uri.base.origin, 'https://deliveric.net'),
-        'request_headers': {
-          'Accept': 'application/json',
-          if (body != null) 'Content-Type': 'application/json; charset=utf-8',
-          'Authorization': 'Bearer «token»',
-          'Accept-Language': Session.I.locale.languageCode,
-        },
-      };
-      final sw = Stopwatch()..start();
-      try {
-        final hdr = {
-          'Accept': 'application/json',
-          if (body != null) 'Content-Type': 'application/json; charset=utf-8',
-          if (Session.I.token != null) 'Authorization': 'Bearer ${Session.I.token}',
-          'Accept-Language': Session.I.locale.languageCode,
-        };
-        final r = await (body == null
-                ? http.get(uri, headers: hdr)
-                : http.post(uri, headers: hdr, body: jsonEncode(body)))
-            .timeout(const Duration(seconds: 60));
-        entry['status'] = r.statusCode;
-        entry['content_type'] = r.headers['content-type'];
-        entry['ms'] = sw.elapsedMilliseconds;
-        final text = utf8.decode(r.bodyBytes);
-        try {
-          final j = jsonDecode(text);
-          if (c.path == 'my_shipments.php' && firstId == null) {
-            final l = Api.listOf(j);
-            if (l.isNotEmpty) firstId = '${l.first['id'] ?? ''}';
-            if (firstId == '') firstId = null;
-          }
-          if (c.path == 'user_info.php' && j is Map && j['userInfo'] is Map) uid = '${j['userInfo']['id']}';
-          entry['response'] = _mask(j, '', c.plain);
-        } catch (_) {
-          entry['response_text'] = text.length > 600 ? '${text.substring(0, 600)}…' : text;
-        }
-      } catch (e) {
-        entry['error'] = '$e';
-      }
-      report.add(entry);
-      if (mounted) setState(() {});
-    }
-    if (mounted) setState(() => loading = false);
-  }
-
-  String get _json => const JsonEncoder.withIndent('  ').convert({
-        'base_url': 'https://deliveric.net/api_v2/',
-        'app_version': '2.1.5',
-        'recorded_at': DateTime.now().toIso8601String(),
-        'calls': report,
-      });
-
-  void _msg(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
-
-  Future<void> _copy() async {
     try {
-      await Clipboard.setData(ClipboardData(text: _json));
-      _msg('Report copied');
-    } catch (_) {
-      _msg('Copy was blocked - use Download or the text box below');
+      await _runSmall();
+      await _runPaged(parts[1], 'my_shipments.php', {'general_status': 'delivere', 'lang': 'en'}, 'shipments');
+      await _runPaged(parts[2], 'returned_shipments.php', {}, 'returned_shipment');
+      await _runTx();
+    } finally {
+      if (mounted) setState(() => running = false);
     }
   }
 
-  Future<void> _save() async {
-    final ok = await downloadText('shipper-api-report.json', _json);
-    _msg(ok ? 'Downloading shipper-api-report.json' : 'Download works on the web version; use Copy here');
+  Future<void> _runSmall() async {
+    final p = parts[0];
+    final out = <String>[];
+    for (var i = 0; i < small.length; i++) {
+      final c = small[i];
+      final q = Map<String, String>.from(c.q);
+      final body = c.body == null ? null : Map<String, dynamic>.from(c.body!);
+      if (body != null && body['id'] == '{ID}') {
+        if (firstId == null) continue;
+        body['id'] = firstId;
+      }
+      final u = _uri(c.path, q);
+      p.status = '${c.path} (${i + 1}/${small.length})';
+      if (mounted) setState(() {});
+      try {
+        final sw = Stopwatch()..start();
+        final r = await _get(u, body: body);
+        out.add(_entry(body == null ? 'GET' : 'POST', u, body, r, sw.elapsedMilliseconds));
+      } catch (e) {
+        out.add(jsonEncode({'method': body == null ? 'GET' : 'POST', 'url': _shown(u), 'error': '$e'}));
+      }
+      if (c.path == 'my_shipments.php' && firstId == null) {
+        // first shipment id, used for the shipment detail call
+        try {
+          final r = await _get(_uri('my_shipments.php', {'general_status': 'delivere', 'start': '0', 'limit': '1', 'lang': 'en'}));
+          final l = Api.listOf(jsonDecode(utf8.decode(r.bodyBytes)));
+          if (l.isNotEmpty) firstId = '${l.first['id']}';
+        } catch (_) {}
+      }
+    }
+    var json = _wrap(out);
+    // sign-in secrets inside the profile reply are not exported
+    json = json.replaceAllMapped(RegExp(r'"(password|sms_password)":"[^"]*"'), (m) => '"${m[1]}":"(not exported)"');
+    p.json = json;
+    p.status = 'ready (${(json.length / 1024).round()} KB)';
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _runPaged(_Part p, String path, Map<String, String> base, String key) async {
+    const page = 1000;
+    final out = <String>[];
+    var start = 0, total = 0;
+    while (true) {
+      p.status = 'loaded $total…';
+      if (mounted) setState(() {});
+      final u = _uri(path, {...base, 'start': '$start', 'limit': '$page'});
+      try {
+        final sw = Stopwatch()..start();
+        final r = await _get(u);
+        final text = utf8.decode(r.bodyBytes);
+        final j = jsonDecode(text);
+        final list = j is Map && j[key] is List ? j[key] as List : <dynamic>[];
+        out.add(_entry('GET', u, null, r, sw.elapsedMilliseconds));
+        total += list.length;
+        if (list.length < page) break;
+        start += page;
+      } catch (e) {
+        out.add(jsonEncode({'method': 'GET', 'url': _shown(u), 'error': '$e'}));
+        break;
+      }
+    }
+    p.json = _wrap(out);
+    p.status = 'ready: $total rows (${(p.json!.length / 1024 / 1024).toStringAsFixed(1)} MB)';
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _runTx() async {
+    final p = parts[3];
+    p.status = 'loading (this can take a minute)…';
+    if (mounted) setState(() {});
+    final u = _uri('my_transactions.php', {});
+    try {
+      final sw = Stopwatch()..start();
+      final r = await _get(u);
+      p.json = _wrap([_entry('GET', u, null, r, sw.elapsedMilliseconds)]);
+      p.status = 'ready (${(p.json!.length / 1024 / 1024).toStringAsFixed(1)} MB)';
+    } catch (e) {
+      p.status = 'failed: $e';
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _save(_Part p) async {
+    final ok = await downloadText(p.file, p.json!);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(ok ? 'Downloading ${p.file}' : 'Downloads work in the web version. Open the app on Render in your browser.')));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('API recorder'), actions: [
-        IconButton(
-          icon: const Icon(Icons.copy),
-          tooltip: 'Copy report',
-          onPressed: loading ? null : _copy,
-        ),
-        IconButton(
-          icon: const Icon(Icons.download),
-          tooltip: 'Download report',
-          onPressed: loading ? null : _save,
-        ),
-      ]),
+      appBar: AppBar(title: const Text('API recorder')),
       body: ListView(padding: const EdgeInsets.all(12), children: [
-        if (loading) const LinearProgressIndicator(color: Brand.orange),
-        Text(
-          loading
-              ? 'Recording ${report.length}/${calls.length}…'
-              : 'Done. Tap download (or copy) at the top right and send the report in the chat. Names, phones, addresses and the token are masked.',
-          style: const TextStyle(color: Brand.muted),
+        if (running) const LinearProgressIndicator(color: Brand.orange),
+        const SizedBox(height: 8),
+        const Text(
+          'Saves the full replies of the read-only endpoints. Nothing is masked or shortened; only your sign-in token is left out. Keep the files private. Wait until each line says ready, then download it and send it in the chat.',
+          style: TextStyle(color: Brand.muted),
         ),
         const SizedBox(height: 12),
-        for (final e in report)
+        for (final p in parts)
           Card(
             child: ListTile(
-              dense: true,
-              title: Text((e['url'] as String).replaceFirst('https://deliveric.net/api_v2/', '')),
-              trailing: Text(e['status'] != null ? '${e['status']}' : 'ERR',
-                  style: TextStyle(color: e['status'] == 200 ? Brand.green : Brand.red, fontWeight: FontWeight.w700)),
+              title: Text(p.title),
+              subtitle: Text(p.status, style: const TextStyle(color: Brand.muted)),
+              trailing: p.json == null
+                  ? null
+                  : IconButton(icon: const Icon(Icons.download, color: Brand.orange), onPressed: () => _save(p)),
             ),
-          ),
-        if (!loading)
-          ExpansionTile(
-            title: const Text('Show report text (press and hold to select all)'),
-            children: [SelectableText(_json, style: const TextStyle(fontFamily: 'monospace', fontSize: 10))],
           ),
       ]),
     );
