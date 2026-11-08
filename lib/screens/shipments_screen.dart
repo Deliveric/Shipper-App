@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/api.dart';
+import '../core/copy_button.dart';
 import '../core/data.dart';
 import '../core/strings.dart';
 import '../core/theme.dart';
@@ -199,7 +200,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                Flexible(child: Text(Api.code(s), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14))),
+                Flexible(child: Row(mainAxisSize: MainAxisSize.min, children: [Flexible(child: Text(Api.code(s), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14))), CopyButton(Api.code(s))])),
                 Text('${fmt(Api.num(Api.cod(s)))} EGP', style: const TextStyle(color: Brand.orange, fontWeight: FontWeight.w700)),
               ]),
               const SizedBox(height: 6),

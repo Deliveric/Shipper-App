@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/api.dart';
+import '../core/copy_button.dart';
 import '../core/strings.dart';
 import '../core/theme.dart';
 
@@ -55,7 +56,7 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
           _row(tr(context, 'customer'), Api.name(s)),
           _row(tr(context, 'address'), Api.pick(s, ['address'])),
           _row('Area', Api.pick(s, ['sector_name'])),
-          _row('Waybill', Api.code(s)),
+          _row('Waybill', Api.code(s), copy: true),
           _row('Order ID', Api.pick(s, ['order_id'])),
           _row('Product', Api.pick(s, ['product_name'])),
           _row(tr(context, 'cod'), Api.cod(s)),
@@ -95,12 +96,13 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
     );
   }
 
-  Widget _row(String k, String v) => v.isEmpty
+  Widget _row(String k, String v, {bool copy = false}) => v.isEmpty
       ? const SizedBox.shrink()
       : Card(
           child: ListTile(
             title: Text(k, style: const TextStyle(color: Brand.muted, fontSize: 13)),
             subtitle: Text(v, style: const TextStyle(color: Brand.text, fontSize: 16)),
+            trailing: copy ? CopyButton(v) : null,
           ),
         );
 }

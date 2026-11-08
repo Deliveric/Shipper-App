@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/api.dart';
+import '../core/copy_button.dart';
 import '../core/theme.dart';
 import 'shipment_details_screen.dart';
 
@@ -97,7 +98,7 @@ class _TrackScreenState extends State<TrackScreen> {
         for (final s in _found)
           Card(
             child: ListTile(
-              title: Text(Api.code(s), style: const TextStyle(fontWeight: FontWeight.w700)),
+              title: Row(children: [Flexible(child: Text(Api.code(s), style: const TextStyle(fontWeight: FontWeight.w700))), CopyButton(Api.code(s))]),
               subtitle: Text('${Api.name(s)} · ${Api.status(s)}${Api.pick(s, ['order_id']).isEmpty ? '' : '\nOrder ${Api.pick(s, ['order_id'])}'}'),
               trailing: Text('${Api.cod(s)} EGP', style: const TextStyle(color: Brand.orange)),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShipmentDetailsScreen(shipment: s))),

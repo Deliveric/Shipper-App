@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'track_screen.dart';
 import 'new_shipment_screen.dart';
 import '../core/api.dart';
+import '../core/copy_button.dart';
 import '../core/data.dart';
 import '../core/session.dart';
 import '../core/strings.dart';
@@ -106,7 +107,7 @@ class HomeScreen extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShipmentDetailsScreen(shipment: s))),
-                    title: Text('#${Api.code(s)}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                    title: Row(children: [Flexible(child: Text('#${Api.code(s)}', style: const TextStyle(fontWeight: FontWeight.w700))), CopyButton(Api.code(s))]),
                     subtitle: Text([Api.name(s), Api.status(s), if (Api.pick(s, ['order_id']).isNotEmpty) 'Order ${Api.pick(s, ['order_id'])}'].where((e) => e.isNotEmpty).join('  •  ')),
                     trailing: Text('${fmt(Api.num(Api.cod(s)))} EGP', style: const TextStyle(color: Brand.orange, fontWeight: FontWeight.w700)),
                   ),
