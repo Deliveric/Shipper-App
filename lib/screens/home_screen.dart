@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'track_screen.dart';
+import 'new_shipment_screen.dart';
 import '../core/api.dart';
 import '../core/data.dart';
 import '../core/session.dart';
@@ -67,7 +68,7 @@ class HomeScreen extends StatelessWidget {
               ]),
               const SizedBox(height: 14),
               Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-                _act(Icons.add, tr(context, 'new_shipment'), () => onTab(0)),
+                _act(Icons.add, tr(context, 'new_shipment'), () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NewShipmentScreen()))),
                 _act(Icons.qr_code_scanner, tr(context, 'scan_track'), () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TrackScreen()))),
                 _act(Icons.local_shipping_outlined, tr(context, 'request_pickup'), () {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Coming soon')));
