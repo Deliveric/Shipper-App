@@ -38,6 +38,49 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
     }
   }
 
+  String _areaLabel(Map s) {
+    final p = '${s['name']}'.split(' - ');
+    return p.length > 1 ? '${p[0]} · ${p[1]}' : p[0];
+  }
+
+  Future<String?> _pickArea() {
+    return showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Brand.card,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        var q = '';
+        return StatefulBuilder(builder: (ctx, set) {
+          final list = _sectors.where((s) => '${s['name']}'.toLowerCase().contains(q.toLowerCase())).toList();
+          return SizedBox(
+            height: MediaQuery.of(ctx).size.height * .8,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(14, 16, 14, MediaQuery.of(ctx).viewInsets.bottom + 10),
+              child: Column(children: [
+                TextField(
+                  autofocus: true,
+                  onChanged: (v) => set(() => q = v),
+                  decoration: const InputDecoration(hintText: 'Search area', prefixIcon: Icon(Icons.search)),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: list.length,
+                    itemBuilder: (_, i) => ListTile(
+                      title: Text(_areaLabel(list[i])),
+                      onTap: () => Navigator.of(ctx).pop('${list[i]['id']}'),
+                    ),
+                  ),
+                ),
+              ]),
+            ),
+          );
+        });
+      },
+    );
+  }
+
   Future<void> _price(String? id) async {
     setState(() { _sector = id; _cost = ''; });
     if (id == null) return;
@@ -103,16 +146,27 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
           _field('Phone', _p1, req: true, kt: TextInputType.phone),
           _field('Second phone', _p2, kt: TextInputType.phone),
           _field('Address', _addr, req: true, lines: 2),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: DropdownButtonFormField<String>(
-              isExpanded: true,
-              value: _sector,
-              hint: Text(!_loaded ? 'Loading areas…' : (_sectors.isEmpty ? 'No areas returned' : 'Area *')),
-              validator: (v) => v == null ? 'Required' : null,
-              items: [for (final s in _sectors) DropdownMenuItem(value: '${s['id']}', child: Text('${s['name']}'.split(' - ').first, overflow: TextOverflow.ellipsis))],
-              onChanged: _price,
-            ),
+          FormField<String>(
+            validator: (_) => _sector == null ? 'Required' : null,
+            builder: (st) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: !_loaded || _sectors.isEmpty ? null : () async {
+                  final id = await _pickArea();
+                  if (id != null) {
+                    await _price(id);
+                    st.didChange(id);
+                  }
+                },
+                child: InputDecorator(
+                  decoration: InputDecoration(prefixIcon: const Icon(Icons.search), errorText: st.errorText),
+                  child: Text(
+                    _sector != null ? _areaLabel(_sectors.firstWhere((e) => '${e['id']}' == _sector)) : (!_loaded ? 'Loading areas…' : (_sectors.isEmpty ? 'No areas returned' : 'Area * (tap to search)')),
+                    style: TextStyle(color: _sector != null ? Brand.text : Brand.muted),
+                  ),
+                ),
+              ),
+            ]),
           ),
           if (_cost.isNotEmpty) Padding(padding: const EdgeInsets.only(bottom: 12, left: 4), child: Text('Shipping cost: $_cost EGP', style: const TextStyle(color: Brand.orange))),
           const SizedBox(height: 8),
