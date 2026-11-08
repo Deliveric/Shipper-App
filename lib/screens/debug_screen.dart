@@ -19,28 +19,32 @@ class DebugScreen extends StatefulWidget {
 class _Call {
   final String path;
   final Map<String, String> q;
-  const _Call(this.path, [this.q = const {}]);
+  final Map<String, dynamic>? body; // when set the call is a JSON POST (read-only endpoints only)
+  final bool plain; // reference data (statuses, areas): names are not personal
+  const _Call(this.path, [this.q = const {}, this.body, this.plain = false]);
 }
 
 class _DebugScreenState extends State<DebugScreen> {
   static const calls = <_Call>[
     _Call('user_info.php'),
-    _Call('my_shipments.php', {'page': '1', 'limit': '3'}),
-    _Call('my_shipments.php', {'page': '1', 'limit': '3', 'general_status': '1'}),
+    _Call('my_shipments.php', {'general_status': 'delivere', 'start': '0', 'limit': '3', 'lang': 'en'}),
+    _Call('my_shipments.php', {'general_status': 'delivere', 'count': '1'}),
+    _Call('my_shipments.php', {'shipper_id': '{UID}', 'status_id': '3', 'general_status': 'delivere', 'lang': 'en'}),
     _Call('shipment.php', {'id': '{ID}'}),
-    _Call('shipment_statuses.php'),
-    _Call('get_shipper_filter_statuses.php'),
+    _Call('shipment.php', {}, {'id': '{ID}', 'app': 'shipper'}),
+    _Call('shipment_statuses.php', {}, null, true),
+    _Call('get_shipper_filter_statuses.php', {}, null, true),
     _Call('statusDashboard.php'),
     _Call('getShipperBalance.php'),
     _Call('transactions_sum.php'),
     _Call('get_withdrawable_amount.php'),
-    _Call('my_transactions.php', {'page': '1', 'limit': '3'}),
-    _Call('returned_shipments.php', {'page': '1', 'limit': '3'}),
+    _Call('my_transactions.php'),
+    _Call('returned_shipments.php', {'start': '0', 'limit': '3'}),
     _Call('notifications.php'),
     _Call('filterData.php'),
     _Call('get_stores.php'),
-    _Call('sectors.php'),
-    _Call('service_types.php'),
+    _Call('sectors.php', {}, null, true),
+    _Call('service_types.php', {}, null, true),
     _Call('get_reasons.php'),
     _Call('get_company_data.php'),
     _Call('get_whats_templates.php'),
@@ -55,15 +59,22 @@ class _DebugScreenState extends State<DebugScreen> {
   final List<Map<String, dynamic>> report = [];
   bool loading = true;
   String? firstId;
+  String? uid;
 
   static final _secretKey = RegExp(r'(name|phone|mobile|address|email|token|password|note|comment|shipper|store|client|merchant|account|iban)', caseSensitive: false);
   static final _longDigits = RegExp(r'\d{9,}');
   static final _mail = RegExp(r'[\w.+-]+@[\w-]+\.[\w.]+');
 
-  dynamic _mask(dynamic v, [String key = '']) {
-    if (v is Map) return v.map((k, x) => MapEntry(k, _mask(x, '$k')));
-    if (v is List) return v.map((x) => _mask(x, key)).toList();
+  dynamic _mask(dynamic v, [String key = '', bool plain = false]) {
+    if (v is Map) return v.map((k, x) => MapEntry(k, _mask(x, '$k', plain)));
+    if (v is List) {
+      // keep only 3 examples of long lists (the full list can be tens of MB)
+      final out = v.take(3).map((x) => _mask(x, key, plain)).toList();
+      if (v.length > 3) out.add('«${v.length - 3} more items not shown (total ${v.length})»');
+      return out;
+    }
     if (v is String) {
+      if (plain) return v.replaceAll(_mail, '«email»').replaceAll(_longDigits, '«number»');
       if (v.isNotEmpty && _secretKey.hasMatch(key) && !RegExp(r'(status|type|count|id$)', caseSensitive: false).hasMatch(key)) {
         return '«masked»';
       }
@@ -81,27 +92,44 @@ class _DebugScreenState extends State<DebugScreen> {
   Future<void> _run() async {
     for (final c in calls) {
       final q = Map<String, String>.from(c.q);
-      if (q.containsValue('{ID}')) {
-        if (firstId == null) continue;
-        q.updateAll((k, v) => v == '{ID}' ? firstId! : v);
-      }
+      Map<String, dynamic>? body = c.body == null ? null : Map<String, dynamic>.from(c.body!);
+      String? sub(String v) => v == '{ID}' ? firstId : (v == '{UID}' ? uid : v);
+      var skip = false;
+      q.updateAll((k, v) {
+        final r = sub(v);
+        if (r == null) skip = true;
+        return r ?? v;
+      });
+      body?.updateAll((k, v) {
+        final r = v is String ? sub(v) : v;
+        if (r == null) skip = true;
+        return r ?? v;
+      });
+      if (skip) continue;
       final uri = Uri.parse('${Api.base}${c.path}').replace(queryParameters: q.isEmpty ? null : q);
       final entry = <String, dynamic>{
-        'method': 'GET',
+        'method': body == null ? 'GET' : 'POST',
+        if (body != null) 'request_body': body,
         'url': uri.toString().replaceAll(Uri.base.origin, 'https://deliveric.net'),
         'request_headers': {
           'Accept': 'application/json',
+          if (body != null) 'Content-Type': 'application/json; charset=utf-8',
           'Authorization': 'Bearer «token»',
           'Accept-Language': Session.I.locale.languageCode,
         },
       };
       final sw = Stopwatch()..start();
       try {
-        final r = await http.get(uri, headers: {
+        final hdr = {
           'Accept': 'application/json',
+          if (body != null) 'Content-Type': 'application/json; charset=utf-8',
           if (Session.I.token != null) 'Authorization': 'Bearer ${Session.I.token}',
           'Accept-Language': Session.I.locale.languageCode,
-        }).timeout(const Duration(seconds: 30));
+        };
+        final r = await (body == null
+                ? http.get(uri, headers: hdr)
+                : http.post(uri, headers: hdr, body: jsonEncode(body)))
+            .timeout(const Duration(seconds: 60));
         entry['status'] = r.statusCode;
         entry['content_type'] = r.headers['content-type'];
         entry['ms'] = sw.elapsedMilliseconds;
@@ -113,7 +141,8 @@ class _DebugScreenState extends State<DebugScreen> {
             if (l.isNotEmpty) firstId = '${l.first['id'] ?? ''}';
             if (firstId == '') firstId = null;
           }
-          entry['response'] = _mask(j);
+          if (c.path == 'user_info.php' && j is Map && j['userInfo'] is Map) uid = '${j['userInfo']['id']}';
+          entry['response'] = _mask(j, '', c.plain);
         } catch (_) {
           entry['response_text'] = text.length > 600 ? '${text.substring(0, 600)}…' : text;
         }
