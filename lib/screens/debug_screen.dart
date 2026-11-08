@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import '../core/api.dart';
+import '../core/download_stub.dart' if (dart.library.html) '../core/download_web.dart';
 import '../core/session.dart';
 import '../core/theme.dart';
 
@@ -132,6 +133,22 @@ class _DebugScreenState extends State<DebugScreen> {
         'calls': report,
       });
 
+  void _msg(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+
+  Future<void> _copy() async {
+    try {
+      await Clipboard.setData(ClipboardData(text: _json));
+      _msg('Report copied');
+    } catch (_) {
+      _msg('Copy was blocked - use Download or the text box below');
+    }
+  }
+
+  Future<void> _save() async {
+    final ok = await downloadText('shipper-api-report.json', _json);
+    _msg(ok ? 'Downloading shipper-api-report.json' : 'Download works on the web version; use Copy here');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -139,12 +156,12 @@ class _DebugScreenState extends State<DebugScreen> {
         IconButton(
           icon: const Icon(Icons.copy),
           tooltip: 'Copy report',
-          onPressed: loading
-              ? null
-              : () {
-                  Clipboard.setData(ClipboardData(text: _json));
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Report copied')));
-                },
+          onPressed: loading ? null : _copy,
+        ),
+        IconButton(
+          icon: const Icon(Icons.download),
+          tooltip: 'Download report',
+          onPressed: loading ? null : _save,
         ),
       ]),
       body: ListView(padding: const EdgeInsets.all(12), children: [
@@ -152,7 +169,7 @@ class _DebugScreenState extends State<DebugScreen> {
         Text(
           loading
               ? 'Recording ${report.length}/${calls.length}…'
-              : 'Done. Tap copy (top right) and paste the report in the chat. Names, phones, addresses and the token are masked.',
+              : 'Done. Tap download (or copy) at the top right and send the report in the chat. Names, phones, addresses and the token are masked.',
           style: const TextStyle(color: Brand.muted),
         ),
         const SizedBox(height: 12),
@@ -164,6 +181,11 @@ class _DebugScreenState extends State<DebugScreen> {
               trailing: Text(e['status'] != null ? '${e['status']}' : 'ERR',
                   style: TextStyle(color: e['status'] == 200 ? Brand.green : Brand.red, fontWeight: FontWeight.w700)),
             ),
+          ),
+        if (!loading)
+          ExpansionTile(
+            title: const Text('Show report text (press and hold to select all)'),
+            children: [SelectableText(_json, style: const TextStyle(fontFamily: 'monospace', fontSize: 10))],
           ),
       ]),
     );
