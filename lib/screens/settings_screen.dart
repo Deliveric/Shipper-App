@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/build_info.dart';
 import '../core/session.dart';
 import '../core/strings.dart';
 import '../core/theme.dart';
@@ -22,6 +23,7 @@ class SettingsScreen extends StatelessWidget {
               child: Text(Session.I.userName!,
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             ),
+          const Center(child: Padding(padding: EdgeInsets.only(top: 4), child: Text(kBuildLabel, style: TextStyle(color: Brand.muted, fontSize: 12)))),
           const SizedBox(height: 14),
           Card(
             child: ListTile(

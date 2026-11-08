@@ -52,7 +52,7 @@ jobs:
         run: dart run flutter_launcher_icons
       - name: Build release APK
         if: env.BUILD_APK == 'true'
-        run: flutter build apk --release --build-number=${{ github.run_number }}
+        run: flutter build apk --release --build-number=${{ github.run_number }} --dart-define=BUILD=${{ github.run_number }}
       - name: Name the output
         if: env.BUILD_APK == 'true'
         run: cp build/app/outputs/flutter-apk/app-release.apk "Shipper Deliveric build ${{ github.run_number }}.apk"
@@ -67,7 +67,7 @@ jobs:
       - name: Build web version
         run: |
           flutter create --org com.deliveric --project-name shipper_app --platforms=web .
-          flutter build web --release
+          flutter build web --release --dart-define=BUILD=${{ github.run_number }}
           (cd build/web && zip -qr "../../Shipper Deliveric web build ${{ github.run_number }}.zip" .)
       - name: Publish static site to the "web" branch (for Render Static Site)
         run: |

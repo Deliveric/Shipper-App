@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/build_info.dart';
 import '../core/api.dart';
 import '../core/session.dart';
 import '../core/strings.dart';
@@ -96,6 +97,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         )
                       : Text(tr(context, 'login')),
                 ),
+                const SizedBox(height: 18),
+                const Text(kBuildLabel, style: TextStyle(color: Brand.muted, fontSize: 12)),
               ],
             ),
           ),
