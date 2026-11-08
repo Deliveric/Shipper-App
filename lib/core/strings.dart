@@ -66,7 +66,7 @@ const _t = <String, Map<String, String>>{
     'home': 'الرئيسية',
     'wallet': 'المحفظة',
     'reports': 'التقارير',
-    'stats': 'الإحصائيات',
+    'stats': 'Stats',
     'profile': 'حسابي',
     'total_cod': 'إجمالي قيمة التحصيل',
     'out_delivery': 'قيمة الشحنات في التوصيل',
