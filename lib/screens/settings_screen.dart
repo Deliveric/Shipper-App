@@ -34,7 +34,7 @@ class SettingsScreen extends StatelessWidget {
           Card(
             child: ListTile(
               leading: const Icon(Icons.bug_report_outlined, color: Brand.orange),
-              title: const Text('Server replies (for support)'),
+              title: const Text('API recorder'),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DebugScreen())),
             ),
           ),
