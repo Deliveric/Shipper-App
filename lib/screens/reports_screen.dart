@@ -45,6 +45,15 @@ class ReportsScreen extends StatelessWidget {
                 const SizedBox(height: 10),
               ],
               _sec('Last 7 days'),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(2, 0, 2, 8),
+                child: Text(
+                  'Delivered shipments per day, ending today. Each bar is the number of shipments delivered that day, '
+                  'counted on the day the delivery was recorded in your account. Today is still in progress, so its bar keeps growing. '
+                  'Total: ${counts.fold<int>(0, (a, b) => a + b)} delivered, average ${(counts.fold<int>(0, (a, b) => a + b) / 7).toStringAsFixed(0)} a day.',
+                  style: const TextStyle(color: Brand.muted, fontSize: 12, height: 1.4),
+                ),
+              ),
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(16)),
