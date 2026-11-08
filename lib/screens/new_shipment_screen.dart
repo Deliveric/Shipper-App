@@ -19,7 +19,7 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
   List<Map<String, dynamic>> _sectors = [], _types = [];
   String? _sector, _type;
   String _cost = '';
-  bool _busy = false;
+  bool _busy = false, _loaded = false;
   String? _error;
 
   @override
@@ -32,9 +32,9 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
     try {
       final s = Api.listOf(await Api.get('sectors.php'));
       final t = Api.listOf(await Api.get('service_types.php'));
-      if (mounted) setState(() { _sectors = s; _types = t; });
+      if (mounted) setState(() { _sectors = s; _types = t; _loaded = true; });
     } catch (e) {
-      if (mounted) setState(() => _error = 'Could not load areas: $e');
+      if (mounted) setState(() { _error = 'Could not load areas: $e'; _loaded = true; });
     }
   }
 
@@ -108,7 +108,7 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
             child: DropdownButtonFormField<String>(
               isExpanded: true,
               value: _sector,
-              hint: Text(_sectors.isEmpty ? 'Loading areas…' : 'Area *'),
+              hint: Text(!_loaded ? 'Loading areas…' : (_sectors.isEmpty ? 'No areas returned' : 'Area *')),
               validator: (v) => v == null ? 'Required' : null,
               items: [for (final s in _sectors) DropdownMenuItem(value: '${s['id']}', child: Text('${s['name']}'.split(' - ').first, overflow: TextOverflow.ellipsis))],
               onChanged: _price,

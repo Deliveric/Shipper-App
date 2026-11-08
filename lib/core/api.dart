@@ -68,7 +68,7 @@ class Api {
   static List<Map<String, dynamic>> listOf(dynamic body) {
     dynamic v = body;
     if (v is Map) {
-      for (final k in ['data', 'shipments', 'items', 'result', 'results', 'transactions', 'statuses']) {
+      for (final k in ['data', 'shipments', 'items', 'result', 'results', 'transactions', 'statuses', 'sectors', 'service_types', 'stores']) {
         if (v[k] is List) {
           v = v[k];
           break;
