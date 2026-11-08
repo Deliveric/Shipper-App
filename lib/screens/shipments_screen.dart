@@ -45,6 +45,55 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Copied $what')));
   }
 
+  String _msg(Map s) => [Api.code(s), Api.area(s), Api.phone(s), Api.name(s)].join('-');
+
+  /// WhatsApp takes one message per link, so each selected shipment gets its own
+  /// message: tap a row (or "Send next") and WhatsApp opens with that shipment's text.
+  void _whatsapp(List<Map<String, dynamic>> items) {
+    final sent = <int>{};
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Brand.card,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => StatefulBuilder(builder: (ctx, set) {
+        Future<void> send(int i) async {
+          await launchUrl(Uri.parse('https://wa.me/?text=${Uri.encodeComponent(_msg(items[i]))}'), mode: LaunchMode.externalApplication);
+          set(() => sent.add(i));
+        }
+
+        final next = List.generate(items.length, (i) => i).where((i) => !sent.contains(i)).toList();
+        return SizedBox(
+          height: MediaQuery.of(ctx).size.height * .75,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+            child: Column(children: [
+              Text('Send on WhatsApp · ${sent.length}/${items.length} sent', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 4),
+              const Text('Each shipment is its own message.', style: TextStyle(color: Brand.muted, fontSize: 12)),
+              const SizedBox(height: 10),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (_, i) => ListTile(
+                    dense: true,
+                    title: Text(_msg(items[i]), style: const TextStyle(fontSize: 13)),
+                    trailing: Icon(sent.contains(i) ? Icons.check_circle : Icons.send, color: sent.contains(i) ? Brand.green : Brand.orange),
+                    onTap: () => send(i),
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: next.isEmpty ? null : () => send(next.first),
+                child: Text(next.isEmpty ? 'All sent' : 'Send next (${next.length} left)'),
+              ),
+            ]),
+          ),
+        );
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -96,10 +145,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
                       _act('Select all ${view.length}', () => setState(() => _sel.addAll(view.map(_key)))),
                       _act('Copy waybills', () => _copy(chosen.map((s) => Api.code(s)).join('\n'), '${chosen.length} waybills')),
                       _act('Copy details', () => _copy(chosen.map(_line).join('\n'), '${chosen.length} shipments')),
-                      _act('Send on WhatsApp', () {
-                        final text = Uri.encodeComponent(chosen.map((s) => [Api.code(s), Api.area(s), Api.phone(s), Api.name(s)].join('-')).join('\n'));
-                        launchUrl(Uri.parse('https://wa.me/?text=$text'), mode: LaunchMode.externalApplication);
-                      }),
+                      _act('Send on WhatsApp', () => _whatsapp(chosen)),
                     ]),
                   ]),
                 )
