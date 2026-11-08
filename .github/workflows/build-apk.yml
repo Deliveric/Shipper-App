@@ -32,6 +32,9 @@ jobs:
       - name: Generate Android project
         if: env.BUILD_APK == 'true'
         run: flutter create --org com.deliveric --project-name shipper_app --platforms=android .
+      - name: Gradle download from services.gradle.org
+        if: env.BUILD_APK == 'true'
+        run: sed -i -E 's#https\\?://github.com/gradle/gradle-distributions/releases/download/v([0-9.]+)/#https\\://services.gradle.org/distributions/#' android/gradle/wrapper/gradle-wrapper.properties; cat android/gradle/wrapper/gradle-wrapper.properties
       - name: Android permissions and app name
         if: env.BUILD_APK == 'true'
         run: |
