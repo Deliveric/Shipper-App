@@ -20,28 +20,9 @@ Future<void> readyForDelivery(BuildContext context, Map<String, dynamic> s) asyn
         ),
       );
 
-  // 1. find the "ready for delivery" status id
-  String statusId = '', statusName = '';
-  List<Map<String, dynamic>> all = [];
-  try {
-    all = Api.listOf(await Api.get('shipment_statuses.php'));
-    for (final x in all) {
-      final text = jsonEncode(x).toLowerCase();
-      if (text.contains('ready for delivery') || text.contains('جاهز للتسليم') || text.contains('ready_for_delivery')) {
-        statusId = Api.pick(x, ['id', 'status_id']);
-        statusName = Api.pick(x, ['name', 'status', 'status_en', 'title']);
-        break;
-      }
-    }
-  } catch (e) {
-    if (context.mounted) await info('Could not read statuses', '$e');
-    return;
-  }
-  if (!context.mounted) return;
-  if (statusId.isEmpty) {
-    await info('No "Ready for delivery" status found', 'shipment_statuses.php returned:\n${const JsonEncoder.withIndent('  ').convert(all)}');
-    return;
-  }
+  // The status the website sets when the shipper presses "Ready for delivery".
+  const statusId = '155';
+  const statusName = 'Ready for Receiving (by Shipper)';
 
   final payload = {
     'ids': [id],
