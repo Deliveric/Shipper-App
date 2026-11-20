@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/api.dart';
 import '../core/copy_button.dart';
 import '../core/data.dart';
+import '../core/ready_action.dart';
 import '../core/session.dart';
 import '../core/strings.dart';
 import '../core/theme.dart';
@@ -281,13 +282,10 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: AppData.I.simReady.contains(Api.pick(s, ['waybill']))
-                      ? Text('✓ ${tl('Ready for delivery')} (${tl('simulation')})', style: const TextStyle(color: Brand.green, fontSize: 12))
+                      ? Text('✓ ${tl('Ready for delivery')}', style: const TextStyle(color: Brand.green, fontSize: 12))
                       : OutlinedButton(
                           style: OutlinedButton.styleFrom(foregroundColor: Brand.orange, side: const BorderSide(color: Brand.orange), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), minimumSize: const Size(0, 34)),
-                          onPressed: () {
-                            AppData.I.markReady(Api.pick(s, ['waybill']));
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tl('Marked ready. Simulation only, nothing was sent to Deliveric.'))));
-                          },
+                          onPressed: () => readyForDelivery(context, s),
                           child: Text(tl('Ready for delivery')),
                         ),
                 ),
