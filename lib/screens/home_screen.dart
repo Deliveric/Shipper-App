@@ -99,9 +99,6 @@ class HomeScreen extends StatelessWidget {
               Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
                 _act(Icons.add, tr(context, 'new_shipment'), () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NewShipmentScreen()))),
                 _act(Icons.qr_code_scanner, tr(context, 'scan_track'), () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TrackScreen()))),
-                _act(Icons.local_shipping_outlined, tr(context, 'request_pickup'), () {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tl('Coming soon'))));
-                }),
               ]),
               _sec(tl('In operation by status')),
               Container(
