@@ -286,7 +286,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
                       : OutlinedButton(
                           style: OutlinedButton.styleFrom(foregroundColor: Brand.orange, side: const BorderSide(color: Brand.orange), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), minimumSize: const Size(0, 34)),
                           onPressed: () => readyForDelivery(context, s),
-                          child: Text(tl('Ready for delivery')),
+                          child: Text(tl('Open in browser')),
                         ),
                 ),
             ]),

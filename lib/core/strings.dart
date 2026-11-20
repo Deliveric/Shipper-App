@@ -90,6 +90,7 @@ String tr(BuildContext c, String key) {
 const _ar = <String, String>{
   'Hello': 'أهلاً',
   'Ready for delivery': 'جاهز للتسليم',
+  'Open in browser': 'افتح في المتصفح',
   'simulation': 'تجريبي',
   'Marked ready. Simulation only, nothing was sent to Deliveric.': 'تم التعليم كجاهز. تجربة فقط، لم يُرسل شيء إلى Deliveric.',
   'Action required': 'تحتاج تدخل',
