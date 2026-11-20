@@ -65,7 +65,7 @@ class _HomeShellState extends State<HomeShell> {
                       children: [
                         Icon(_i == n ? items[n].$2 : items[n].$1, color: _i == n ? Brand.orange : Brand.muted, size: 26),
                         const SizedBox(height: 2),
-                        Text(tr(context, items[n].$3), style: TextStyle(fontSize: 10.5, color: _i == n ? Brand.orange : Brand.muted)),
+                        Text(tr(context, items[n].$3), textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10, height: 1.1, color: _i == n ? Brand.orange : Brand.muted)),
                         const SizedBox(height: 3),
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
