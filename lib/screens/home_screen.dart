@@ -36,7 +36,7 @@ class HomeScreen extends StatelessWidget {
               if ((Session.I.userName ?? '').isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10, left: 2),
-                  child: Text('Hello, ${Session.I.userName}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                  child: Text('${tl('Hello')}, ${Session.I.userName}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                 ),
               if (d.loading) const LinearProgressIndicator(color: Brand.orange, minHeight: 3),
               Container(
@@ -46,7 +46,7 @@ class HomeScreen extends StatelessWidget {
                   gradient: const LinearGradient(colors: [Brand.orange, Brand.orangeDeep], begin: Alignment.topLeft, end: Alignment.bottomRight),
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Shipments in operation · COD to collect', style: TextStyle(color: Color(0xBF1B1B17), fontSize: 12)),
+                  Text(tl('Shipments in operation · COD to collect'), style: const TextStyle(color: Color(0xBF1B1B17), fontSize: 12)),
                   const SizedBox(height: 2),
                   Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
                     Text(fmt(d.inOperationCod), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: Brand.dark)),

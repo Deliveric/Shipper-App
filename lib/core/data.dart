@@ -104,6 +104,14 @@ class AppData extends ChangeNotifier {
         }
       }),
       guard(() async => net = _n((await Api.get('transactions_sum.php'))['balance'])),
+      guard(() async {
+        final u = await Api.get('user_info.php');
+        final i = u is Map ? u['userInfo'] : null;
+        if (i is Map) {
+          final n = '${i['name'] ?? ''}'.trim();
+          await Session.I.setName(n.isNotEmpty ? n : '${i['company_name'] ?? ''}'.trim());
+        }
+      }),
       guard(() async => transferable = _n((await Api.get('get_withdrawable_amount.php'))['withdrawable_amount'])),
       guard(() async {
         final r = await Api.get('getShipperBalance.php');

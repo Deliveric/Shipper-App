@@ -19,6 +19,13 @@ class Session extends ChangeNotifier {
     locale = Locale(_p.getString('lang') ?? 'en');
   }
 
+  Future<void> setName(String name) async {
+    if (name.isEmpty || name == userName) return;
+    userName = name;
+    await _p.setString('user_name', name);
+    notifyListeners();
+  }
+
   bool get loggedIn => token != null && token!.isNotEmpty;
 
   Future<void> save({required String token, String? userId, String? name}) async {
