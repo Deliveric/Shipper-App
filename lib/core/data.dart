@@ -55,7 +55,16 @@ class AppData extends ChangeNotifier {
 
   /// Same list as the website page "Shipments that need action from the shipper".
   static const actionStatuses = {'Hold (Follow with Shipper)', 'Cancelled'};
-  List<Map<String, dynamic>> get actionRequired => shipments.where((s) => actionStatuses.contains('${s['status_en']}'.trim())).toList();
+  /// SIMULATION ONLY: waybills the user marked "Ready for delivery" in this session.
+  /// Nothing is sent to Deliveric; it is cleared when the page reloads.
+  final Set<String> simReady = {};
+  void markReady(String waybill) {
+    simReady.add(waybill);
+    notifyListeners();
+  }
+
+  List<Map<String, dynamic>> get actionRequired =>
+      shipments.where((s) => actionStatuses.contains('${s['status_en']}'.trim()) && !simReady.contains('${s['waybill']}')).toList();
 
   List<Map<String, dynamic>> shipments = [];
   int allCount = 0;

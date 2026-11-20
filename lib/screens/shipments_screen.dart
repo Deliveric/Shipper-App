@@ -277,6 +277,20 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
               const SizedBox(height: 6),
               Text([Api.name(s), Api.area(s)].where((e) => e.isNotEmpty).join(' · '), style: const TextStyle(fontSize: 12, color: Brand.muted)),
               if (Api.pick(s, ['order_id']).isNotEmpty) Text('${tl('Order')} ${Api.pick(s, ['order_id'])}', style: const TextStyle(fontSize: 12, color: Brand.muted)),
+              if (AppData.actionStatuses.contains(en))
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: AppData.I.simReady.contains(Api.pick(s, ['waybill']))
+                      ? Text('✓ ${tl('Ready for delivery')} (${tl('simulation')})', style: const TextStyle(color: Brand.green, fontSize: 12))
+                      : OutlinedButton(
+                          style: OutlinedButton.styleFrom(foregroundColor: Brand.orange, side: const BorderSide(color: Brand.orange), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), minimumSize: const Size(0, 34)),
+                          onPressed: () {
+                            AppData.I.markReady(Api.pick(s, ['waybill']));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tl('Marked ready. Simulation only, nothing was sent to Deliveric.'))));
+                          },
+                          child: Text(tl('Ready for delivery')),
+                        ),
+                ),
             ]),
           ),
         ]),
