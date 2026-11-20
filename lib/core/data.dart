@@ -46,6 +46,17 @@ class AppData extends ChangeNotifier {
   AppData._();
 
   bool loading = false;
+  /// Shipments list shows only "action required" ones (set from Home / the chip).
+  bool actionOnly = false;
+  void setActionOnly(bool v) {
+    actionOnly = v;
+    notifyListeners();
+  }
+
+  /// Same list as the website page "Shipments that need action from the shipper".
+  static const actionStatuses = {'Hold (Follow with Shipper)', 'Cancelled'};
+  List<Map<String, dynamic>> get actionRequired => shipments.where((s) => actionStatuses.contains('${s['status_en']}'.trim())).toList();
+
   List<Map<String, dynamic>> shipments = [];
   int allCount = 0;
   num allCod = 0, net = 0, transferable = 0, codCollected = 0;

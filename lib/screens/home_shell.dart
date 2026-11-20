@@ -44,7 +44,9 @@ class _HomeShellState extends State<HomeShell> {
     return Scaffold(
       extendBody: true,
       body: IndexedStack(index: _i, children: pages),
-      bottomNavigationBar: SafeArea(
+      bottomNavigationBar: ListenableBuilder(
+        listenable: AppData.I,
+        builder: (context, _) => SafeArea(
         child: Container(
           margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
           height: 68,
@@ -63,7 +65,11 @@ class _HomeShellState extends State<HomeShell> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(_i == n ? items[n].$2 : items[n].$1, color: _i == n ? Brand.orange : Brand.muted, size: 26),
+                        Badge(
+                          isLabelVisible: n == 0 && AppData.I.actionRequired.isNotEmpty,
+                          label: Text('${AppData.I.actionRequired.length}'),
+                          child: Icon(_i == n ? items[n].$2 : items[n].$1, color: _i == n ? Brand.orange : Brand.muted, size: 26),
+                        ),
                         const SizedBox(height: 2),
                         Text(tr(context, items[n].$3), textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10, height: 1.1, color: _i == n ? Brand.orange : Brand.muted)),
                         const SizedBox(height: 3),
@@ -80,7 +86,7 @@ class _HomeShellState extends State<HomeShell> {
             ],
           ),
         ),
-      ),
+      )),
     );
   }
 }

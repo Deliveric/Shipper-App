@@ -39,6 +39,34 @@ class HomeScreen extends StatelessWidget {
                   child: Text('${tl('Hello')}, ${Session.I.userName}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                 ),
               if (d.loading) const LinearProgressIndicator(color: Brand.orange, minHeight: 3),
+              if (d.actionRequired.isNotEmpty)
+                GestureDetector(
+                  onTap: () {
+                    d.setActionOnly(true);
+                    onTab(0);
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0x26FF8C82),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Brand.red, width: 1.2),
+                    ),
+                    child: Row(children: [
+                      const Icon(Icons.notifications_active, color: Brand.red),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text('${d.actionRequired.length} ${tl('shipments need your action')}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                          const SizedBox(height: 2),
+                          Text(tl('Tap to review them'), style: const TextStyle(color: Brand.muted, fontSize: 12)),
+                        ]),
+                      ),
+                      const Icon(Icons.chevron_right, color: Brand.red),
+                    ]),
+                  ),
+                ),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(

@@ -28,6 +28,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
   List<Map<String, dynamic>> get _view {
     final q = _search.text.trim().toLowerCase();
     return AppData.I.shipments.where((s) {
+      if (AppData.I.actionOnly && !AppData.actionStatuses.contains(_en(s))) return false;
       if (_status.isNotEmpty && _en(s) != _status) return false;
       if (q.isEmpty) return true;
       final hay = [Api.code(s), Api.pick(s, ['order_id']), Api.name(s), Api.phone(s), Api.area(s), _en(s)].join(' ').toLowerCase();
@@ -125,6 +126,19 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
               SizedBox(
                 height: 48,
                 child: ListView(scrollDirection: Axis.horizontal, children: [
+                  if (AppData.I.actionRequired.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8, top: 6, bottom: 6),
+                      child: ChoiceChip(
+                        label: Text('${tl('Action required')}  ${AppData.I.actionRequired.length}'),
+                        selected: AppData.I.actionOnly,
+                        selectedColor: Brand.red,
+                        labelStyle: TextStyle(fontSize: 12, color: AppData.I.actionOnly ? Brand.dark : Brand.red, fontWeight: FontWeight.w600),
+                        backgroundColor: Brand.card,
+                        side: BorderSide.none,
+                        onSelected: (v) => AppData.I.setActionOnly(v),
+                      ),
+                    ),
                   _chip(tr(context, 'all'), '', all.length),
                   for (final n in names) _chip(Session.I.locale.languageCode == 'ar' && (arName[n] ?? '').isNotEmpty ? arName[n]! : n, n, counts[n]!),
                 ]),
@@ -203,7 +217,10 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
         labelStyle: TextStyle(fontSize: 12, color: on ? Brand.dark : Brand.muted, fontWeight: on ? FontWeight.w600 : FontWeight.w400),
         backgroundColor: Brand.card,
         side: BorderSide.none,
-        onSelected: (_) => setState(() => _status = value),
+        onSelected: (_) {
+          AppData.I.setActionOnly(false);
+          setState(() => _status = value);
+        },
       ),
     );
   }

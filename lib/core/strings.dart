@@ -89,6 +89,9 @@ String tr(BuildContext c, String key) {
 /// English text -> Arabic. Screens call t('English text'); English stays as is.
 const _ar = <String, String>{
   'Hello': 'أهلاً',
+  'Action required': 'تحتاج تدخل',
+  'shipments need your action': 'شحنات تحتاج تدخل منك',
+  'Tap to review them': 'اضغط للمراجعة',
   'Shipments in operation · COD to collect': 'الشحنات قيد التشغيل · COD المطلوب تحصيله',
   'Net Deserved': 'صافي المستحق',
   'The Transferable Amount': 'المبلغ القابل للتحويل',
