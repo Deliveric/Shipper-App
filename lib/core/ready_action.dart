@@ -24,18 +24,26 @@ Future<void> readyForDelivery(BuildContext context, Map<String, dynamic> s) asyn
   const statusId = '155';
   const statusName = 'Ready for Receiving (by Shipper)';
 
-  final payload = {
-    'ids': [id],
-    'status_id': statusId,
-    'notes': 'Status by sender: cancel confirmation',
-  };
+  const note = 'Status by sender: cancel confirmation';
+  // The server answered "Change Failed" to the first shape, so the request shapes below
+  // are tried one after the other (all ask for the same change) until one succeeds.
+  final variants = <Map<String, dynamic>>[
+    {'ids': [id], 'status_id': statusId, 'notes': note},
+    {'shipment_ids': [id], 'status_id': statusId, 'notes': note},
+    {'ids': id, 'status_id': statusId, 'notes': note},
+    {'ids': [id], 'status': statusId, 'notes': note},
+    {'id': id, 'status_id': statusId, 'notes': note},
+    {'ids': [id], 'status_id': statusId, 'note': note},
+    {'ids': [id], 'status_id': int.tryParse(statusId) ?? statusId, 'notes': note, 'store_id': ''},
+  ];
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: Brand.card,
       title: Text('Change $waybill to "$statusName"?'),
       content: SingleChildScrollView(
-        child: SelectableText('This is a REAL change on Deliveric.\n\nPOST change_shipments_status.php\n${const JsonEncoder.withIndent('  ').convert(payload)}',
+        child: SelectableText(
+            'This is a REAL change on Deliveric.\n\nPOST change_shipments_status.php, trying up to ${variants.length} request formats until one works. First one:\n${const JsonEncoder.withIndent('  ').convert(variants.first)}',
             style: const TextStyle(fontSize: 12.5)),
       ),
       actions: [
@@ -46,13 +54,22 @@ Future<void> readyForDelivery(BuildContext context, Map<String, dynamic> s) asyn
   );
   if (ok != true || !context.mounted) return;
 
-  // 2. send and show the raw reply
-  String reply;
-  try {
-    reply = const JsonEncoder.withIndent('  ').convert(await Api.post('change_shipments_status.php', payload));
-  } catch (e) {
-    reply = 'ERROR: $e';
+  // 2. send; stop at the first reply without "errors"
+  final log = StringBuffer();
+  for (var n = 0; n < variants.length; n++) {
+    String line;
+    bool success = false;
+    try {
+      final r = await Api.post('change_shipments_status.php', variants[n]);
+      success = r is Map && r['errors'] == null && r['status'] != false;
+      line = jsonEncode(r);
+    } catch (e) {
+      line = 'ERROR: $e';
+    }
+    log.writeln('#${n + 1} ${jsonEncode(variants[n])}\n   -> $line\n');
+    if (success) break;
   }
+  final reply = log.toString();
 
   // 3. track: re-read the shipment
   String now = '';
