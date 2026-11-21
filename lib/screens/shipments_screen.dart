@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/api.dart';
+import '../core/contact.dart';
 import '../core/copy_button.dart';
 import '../core/data.dart';
 import '../core/ready_action.dart';
@@ -270,7 +271,6 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 Flexible(child: Row(mainAxisSize: MainAxisSize.min, children: [Flexible(child: Text(Api.code(s), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14))), CopyButton(Api.code(s))])),
-                Text('${fmt(Api.num(Api.cod(s)))} ${tl('EGP')}', style: const TextStyle(color: Brand.orange, fontWeight: FontWeight.w700)),
               ]),
               const SizedBox(height: 6),
               Container(
@@ -295,6 +295,12 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
                 ),
             ]),
           ),
+          const SizedBox(width: 8),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Text('${fmt(Api.num(Api.cod(s)))} ${tl('EGP')}', style: const TextStyle(color: Brand.orange, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 10),
+            ContactButtons(s),
+          ]),
         ]),
       ),
     );

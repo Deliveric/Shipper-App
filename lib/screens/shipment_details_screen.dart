@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/api.dart';
+import '../core/contact.dart';
 import '../core/copy_button.dart';
 import '../core/strings.dart';
 import '../core/theme.dart';
@@ -45,15 +46,6 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final phone = Api.phone(s);
-    // WhatsApp needs the country code: 01200221822 -> 201200221822 (Egypt).
-    var wa = phone.replaceAll(RegExp(r'[^0-9]'), '');
-    if (wa.startsWith('00')) {
-      wa = wa.substring(2);
-    } else if (wa.startsWith('0')) {
-      wa = '20${wa.substring(1)}';
-    } else if (wa.length == 10 && wa.startsWith('1')) {
-      wa = '20$wa';
-    }
     return Scaffold(
       appBar: AppBar(title: Text(tr(context, 'details'))),
       body: ListView(
@@ -86,7 +78,7 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.call),
                   label: Text(tr(context, 'call')),
-                  onPressed: () => _open('tel:$phone'),
+                  onPressed: () => callCustomer(phone),
                 ),
               ),
               const SizedBox(width: 10),
@@ -95,7 +87,7 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
                   style: ElevatedButton.styleFrom(backgroundColor: Brand.green),
                   icon: const Icon(Icons.chat),
                   label: Text(tr(context, 'whatsapp')),
-                  onPressed: () => _open('https://wa.me/$wa'),
+                  onPressed: () => whatsappCustomer(context, s),
                 ),
               ),
             ]),
