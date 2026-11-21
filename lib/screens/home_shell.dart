@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/data.dart';
+import '../core/session.dart';
 import '../core/strings.dart';
 import '../core/theme.dart';
 import 'accounts_screen.dart';
@@ -23,6 +24,34 @@ class _HomeShellState extends State<HomeShell> {
     AppData.I.refresh();
   }
 
+  Widget _accountBar() => Padding(
+        padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: ChoiceChip(
+                label: Text('${tl('All')} (${Session.I.accounts.length})'),
+                selected: Session.I.active.length == Session.I.accounts.length,
+                selectedColor: Brand.orange,
+                onSelected: (_) => Session.I.selectAll(),
+              ),
+            ),
+            for (final a in Session.I.accounts)
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: ChoiceChip(
+                  label: Text(a.title),
+                  selected: Session.I.active.length == 1 && Session.I.isSelected(a.id),
+                  selectedColor: Brand.orange,
+                  onSelected: (_) => Session.I.only(a.id),
+                ),
+              ),
+          ]),
+        ),
+      );
+
   void goTo(int i) => setState(() => _i = i);
 
   @override
@@ -43,7 +72,16 @@ class _HomeShellState extends State<HomeShell> {
     ];
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(index: _i, children: pages),
+      body: SafeArea(
+        bottom: false,
+        child: Column(children: [
+          ListenableBuilder(
+            listenable: Session.I,
+            builder: (context, _) => Session.I.accounts.length > 1 ? _accountBar() : const SizedBox.shrink(),
+          ),
+          Expanded(child: IndexedStack(index: _i, children: pages)),
+        ]),
+      ),
       bottomNavigationBar: ListenableBuilder(
         listenable: AppData.I,
         builder: (context, _) => SafeArea(

@@ -38,34 +38,6 @@ class HomeScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 10, left: 2),
                   child: Text('${tl('Hello')}, ${Session.I.userName}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                 ),
-              if (Session.I.accounts.length > 1)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: ChoiceChip(
-                          label: Text('${tl('All')} (${Session.I.accounts.length})'),
-                          selected: Session.I.active.length == Session.I.accounts.length,
-                          selectedColor: Brand.orange,
-                          onSelected: (_) => Session.I.selectAll(),
-                        ),
-                      ),
-                      for (final a in Session.I.accounts)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: ChoiceChip(
-                            label: Text(a.title),
-                            selected: Session.I.active.length == 1 && Session.I.isSelected(a.id),
-                            selectedColor: Brand.orange,
-                            onSelected: (_) => Session.I.only(a.id),
-                          ),
-                        ),
-                    ]),
-                  ),
-                ),
               if (d.loading) const LinearProgressIndicator(color: Brand.orange, minHeight: 3),
               if (d.actionRequired.isNotEmpty)
                 GestureDetector(
