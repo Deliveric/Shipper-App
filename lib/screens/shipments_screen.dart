@@ -137,7 +137,10 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
                         labelStyle: TextStyle(fontSize: 12, color: AppData.I.actionOnly ? Brand.dark : Brand.red, fontWeight: FontWeight.w600),
                         backgroundColor: Brand.card,
                         side: BorderSide.none,
-                        onSelected: (v) => AppData.I.setActionOnly(v),
+                        onSelected: (v) {
+                          setState(() => _status = '');
+                          AppData.I.setActionOnly(v);
+                        },
                       ),
                     ),
                   _chip(tr(context, 'all'), '', all.length),
@@ -208,7 +211,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
       );
 
   Widget _chip(String label, String value, int count) {
-    final on = _status == value;
+    final on = !AppData.I.actionOnly && _status == value;
     return Padding(
       padding: const EdgeInsets.only(right: 8, top: 6, bottom: 6),
       child: ChoiceChip(

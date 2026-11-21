@@ -54,7 +54,7 @@ class AppData extends ChangeNotifier {
   }
 
   /// Same list as the website page "Shipments that need action from the shipper".
-  static const actionStatuses = {'Hold (Follow with Shipper)', 'Cancelled'};
+  static const actionStatuses = {'Hold (Follow with Shipper)'};
   /// SIMULATION ONLY: waybills the user marked "Ready for delivery" in this session.
   /// Nothing is sent to Deliveric; it is cleared when the page reloads.
   final Set<String> simReady = {};
