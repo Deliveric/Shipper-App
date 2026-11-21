@@ -111,6 +111,11 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
         final arName = <String, String>{for (final s in all) _en(s): Api.pick(s, ['status_ar'])};
         final names = counts.keys.toList()..sort((a, b) => counts[b]!.compareTo(counts[a]!));
         final view = _view;
+        final shownStatus = AppData.I.actionOnly
+            ? tl('Action required')
+            : _status.isEmpty
+                ? tr(context, 'all')
+                : (Session.I.locale.languageCode == 'ar' && (arName[_status] ?? '').isNotEmpty ? arName[_status]! : _status);
         final cod = view.fold<num>(0, (a, s) => a + Api.num(Api.cod(s)));
         final chosen = _chosen;
         final chosenCod = chosen.fold<num>(0, (a, s) => a + Api.num(Api.cod(s)));
@@ -182,7 +187,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
                   child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Text('${view.length} ${tl('shipments')}', style: const TextStyle(color: Brand.muted, fontSize: 12)),
+                    Text('${view.length} ${tl('shipments')} ($shownStatus)', style: const TextStyle(color: Brand.muted, fontSize: 12)),
                     Text('COD ${fmt(cod)} ${tl('EGP')}', style: const TextStyle(color: Brand.muted, fontSize: 12)),
                   ]),
                 ),
