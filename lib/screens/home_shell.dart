@@ -32,28 +32,28 @@ class _HomeShellState extends State<HomeShell> {
             Padding(
               padding: const EdgeInsets.only(right: 6),
               child: ChoiceChip(
-                label: Text('${tl('All')} (${Session.I.accounts.length})'),
-                selected: Session.I.active.length == Session.I.accounts.length,
+                label: Text('${tl('All')} (${Session.I.ticked.length})'),
+                selected: Session.I.viewId == null,
                 selectedColor: Brand.orange,
                 elevation: 0,
                 pressElevation: 0,
                 shadowColor: Colors.transparent,
                 surfaceTintColor: Colors.transparent,
-                onSelected: (_) => Session.I.selectAll(),
+                onSelected: (_) => Session.I.setView(null),
               ),
             ),
-            for (final a in Session.I.accounts)
+            for (final a in Session.I.ticked)
               Padding(
                 padding: const EdgeInsets.only(right: 6),
                 child: ChoiceChip(
                   label: Text(a.title),
-                  selected: Session.I.active.length == 1 && Session.I.isSelected(a.id),
+                  selected: Session.I.viewId == a.id,
                   selectedColor: Brand.orange,
                 elevation: 0,
                 pressElevation: 0,
                 shadowColor: Colors.transparent,
                 surfaceTintColor: Colors.transparent,
-                  onSelected: (_) => Session.I.only(a.id),
+                  onSelected: (_) => Session.I.setView(a.id),
                 ),
               ),
           ]),
@@ -85,7 +85,7 @@ class _HomeShellState extends State<HomeShell> {
         child: Column(children: [
           ListenableBuilder(
             listenable: Session.I,
-            builder: (context, _) => Session.I.multi ? _accountBar() : const SizedBox.shrink(),
+            builder: (context, _) => Session.I.combinedMode ? _accountBar() : const SizedBox.shrink(),
           ),
           Expanded(child: IndexedStack(index: _i, children: pages)),
         ]),

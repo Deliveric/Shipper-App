@@ -119,6 +119,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
             color: Brand.orange,
             onRefresh: AppData.I.refresh,
             child: ListView(padding: const EdgeInsets.fromLTRB(12, 4, 12, 110), children: [
+              if (AppData.I.loading) const Padding(padding: EdgeInsets.only(bottom: 8), child: LinearProgressIndicator(color: Brand.orange, minHeight: 3)),
               TextField(
                 controller: _search,
                 onChanged: (_) => setState(() {}),
@@ -177,7 +178,15 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
                     Text('COD ${fmt(cod)} ${tl('EGP')}', style: const TextStyle(color: Brand.muted, fontSize: 12)),
                   ]),
                 ),
-              if (AppData.I.loading && all.isEmpty) const Padding(padding: EdgeInsets.only(top: 40), child: Center(child: CircularProgressIndicator(color: Brand.orange))),
+              if (AppData.I.loading && all.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 60),
+                  child: Column(children: [
+                    const SizedBox(width: 46, height: 46, child: CircularProgressIndicator(color: Brand.orange, strokeWidth: 4)),
+                    const SizedBox(height: 14),
+                    Text(tl('Loading shipments…'), style: const TextStyle(color: Brand.muted)),
+                  ]),
+                ),
               if (!AppData.I.loading && view.isEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 40),

@@ -51,13 +51,33 @@ class Session extends ChangeNotifier {
     await _p.remove('user_name');
   }
 
-  /// accounts that are ticked (at least one while any account exists)
-  List<Account> get active {
+  /// accounts ticked in Profile (at least one while any account exists)
+  List<Account> get ticked {
     final l = accounts.where((a) => _selected.contains(a.id)).toList();
     return l.isEmpty && accounts.isNotEmpty ? [accounts.first] : l;
   }
 
-  bool isSelected(String id) => active.any((a) => a.id == id);
+  /// Combined mode = several accounts ticked in Profile. The top bar exists only then.
+  bool get combinedMode => ticked.length > 1;
+
+  /// Account picked in the top bar (null = all ticked accounts). Does not change the Profile ticks.
+  String? viewId;
+
+  /// accounts whose data is shown right now
+  List<Account> get active {
+    if (viewId != null) {
+      final v = accounts.where((a) => a.id == viewId && _selected.contains(a.id)).toList();
+      if (v.isNotEmpty) return v;
+    }
+    return ticked;
+  }
+
+  Future<void> setView(String? id) async {
+    viewId = id;
+    notifyListeners();
+  }
+
+  bool isSelected(String id) => ticked.any((a) => a.id == id);
   String? get token => active.isEmpty ? null : active.first.token;
   String? get userName => active.isEmpty ? null : active.map((a) => a.title).join(' + ');
   bool get loggedIn => accounts.isNotEmpty;
@@ -76,6 +96,7 @@ class Session extends ChangeNotifier {
     accounts.removeWhere((a) => a.token == token || (uid.isNotEmpty && a.userId == uid));
     final a = Account(token, uid, name ?? '');
     accounts.add(a);
+    viewId = null;
     _selected.removeWhere((id) => !accounts.any((x) => x.id == id));
     if (!add) _selected.clear();
     _selected.add(a.id);
@@ -84,6 +105,7 @@ class Session extends ChangeNotifier {
   }
 
   Future<void> selectAll() async {
+    viewId = null;
     _selected
       ..clear()
       ..addAll(accounts.map((a) => a.id));
@@ -101,6 +123,7 @@ class Session extends ChangeNotifier {
 
   /// Tick / untick an account (combined mode when several are ticked).
   Future<void> toggle(String id) async {
+    viewId = null;
     if (_selected.contains(id)) {
       if (_selected.length > 1) _selected.remove(id);
     } else {
@@ -112,6 +135,7 @@ class Session extends ChangeNotifier {
 
   /// Work with this account only.
   Future<void> only(String id) async {
+    viewId = null;
     _selected
       ..clear()
       ..add(id);
@@ -120,6 +144,7 @@ class Session extends ChangeNotifier {
   }
 
   Future<void> remove(String id) async {
+    viewId = null;
     accounts.removeWhere((a) => a.id == id);
     _selected.remove(id);
     if (_selected.isEmpty && accounts.isNotEmpty) _selected.add(accounts.first.id);

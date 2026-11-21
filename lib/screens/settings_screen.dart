@@ -43,9 +43,9 @@ class SettingsScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                Session.I.multi
-                    ? '${tl('Combined')} — ${Session.I.active.length} ${tl('accounts')}\n${tl('All numbers, shipments and stats are added together')}'
-                    : '${tl('One account')}: ${Session.I.userName ?? ''}',
+                Session.I.combinedMode
+                    ? '${tl('Combined')} — ${Session.I.ticked.length} ${tl('accounts')}\n${tl('All numbers, shipments and stats are added together')}'
+                    : '${tl('One account')}: ${Session.I.ticked.first.title}',
                 style: const TextStyle(fontSize: 12.5, color: Brand.muted),
               ),
             ),
