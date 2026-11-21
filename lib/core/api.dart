@@ -18,13 +18,13 @@ class Api {
   static String get base => kIsWeb ? '${Uri.base.origin}/api_v2/' : 'https://deliveric.net/api_v2/';
   static const mediaBase = 'https://deliveric.net/';
 
-  static Map<String, String> get _headers => {
+  static Map<String, String> headersFor([String? token]) => {
         'Accept': 'application/json',
-        if (Session.I.token != null) 'Authorization': 'Bearer ${Session.I.token}',
+        if ((token ?? Session.I.token) != null) 'Authorization': 'Bearer ${token ?? Session.I.token}',
         'Accept-Language': Session.I.locale.languageCode,
       };
 
-  static dynamic _decode(http.Response r) {
+  static dynamic _decode(http.Response r, [String? token]) {
     dynamic body;
     try {
       body = jsonDecode(utf8.decode(r.bodyBytes));
@@ -32,7 +32,8 @@ class Api {
       throw ApiException('Unexpected response (${r.statusCode})');
     }
     if (r.statusCode == 401) {
-      Session.I.logout();
+      final a = Session.I.byToken(token ?? Session.I.token);
+      if (a != null) Session.I.remove(a.id);
       throw ApiException('Session expired');
     }
     if (body is Map && (body['status'] == false || body['success'] == false)) {
@@ -45,23 +46,23 @@ class Api {
     return body;
   }
 
-  static Future<dynamic> get(String path, [Map<String, String>? q]) async {
+  static Future<dynamic> get(String path, [Map<String, String>? q, String? token]) async {
     final uri = Uri.parse('$base$path').replace(
       queryParameters: {
         ...Uri.parse('$base$path').queryParameters,
         if (q != null) ...q,
       },
     );
-    return _decode(await http.get(uri, headers: _headers).timeout(const Duration(seconds: 30)));
+    return _decode(await http.get(uri, headers: headersFor(token)).timeout(const Duration(seconds: 30)), token);
   }
 
   /// The original app posts JSON bodies (Content-Type application/json).
-  static Future<dynamic> post(String path, Map<String, dynamic> body) async {
+  static Future<dynamic> post(String path, Map<String, dynamic> body, [String? token]) async {
     return _decode(await http
         .post(Uri.parse('$base$path'),
-            headers: {..._headers, 'Content-Type': 'application/json; charset=utf-8'},
+            headers: {...headersFor(token), 'Content-Type': 'application/json; charset=utf-8'},
             body: jsonEncode(body))
-        .timeout(const Duration(seconds: 30)));
+        .timeout(const Duration(seconds: 30)), token);
   }
 
   /// The backend wraps lists under different keys; find the first list.
@@ -88,7 +89,7 @@ class Api {
   /// Raw server reply as text (used by the debug screen).
   static Future<String> raw(String path, [Map<String, String>? q]) async {
     final uri = Uri.parse('$base$path').replace(queryParameters: q);
-    final r = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 30));
+    final r = await http.get(uri, headers: headersFor()).timeout(const Duration(seconds: 30));
     return 'HTTP ${r.statusCode}\n${utf8.decode(r.bodyBytes)}';
   }
 

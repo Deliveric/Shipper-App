@@ -88,6 +88,16 @@ String tr(BuildContext c, String key) {
 
 /// English text -> Arabic. Screens call t('English text'); English stays as is.
 const _ar = <String, String>{
+  'Accounts': 'الحسابات',
+  'Add account': 'إضافة حساب',
+  'Only this': 'ده بس',
+  'Combined': 'مجمّع',
+  'accounts': 'حسابات',
+  'One account': 'حساب واحد',
+  'All numbers, shipments and stats are added together': 'كل الأرقام والشحنات والإحصائيات بتتجمع',
+  'Remove account': 'حذف الحساب',
+  'Remove': 'حذف',
+  'Create under account': 'إنشاء على حساب',
   'Hello': 'أهلاً',
   'Ready for delivery': 'جاهز للتسليم',
   'Open in browser': 'افتح في المتصفح',

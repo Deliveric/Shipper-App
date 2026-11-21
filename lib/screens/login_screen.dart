@@ -7,7 +7,8 @@ import '../core/theme.dart';
 import 'home_shell.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final bool addMode;
+  const LoginScreen({super.key, this.addMode = false});
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -39,9 +40,14 @@ class _LoginScreenState extends State<LoginScreen> {
         token: token,
         userId: Api.pick(data, ['id', 'user_id']),
         name: Api.pick(data, ['name', 'full_name', 'username']),
+        add: widget.addMode,
       );
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomeShell()));
+      if (widget.addMode) {
+        Navigator.of(context).pop();
+      } else {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomeShell()));
+      }
     } catch (e) {
       setState(() => _error = '$e');
     } finally {
@@ -53,6 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Brand.dark,
+      appBar: widget.addMode ? AppBar(backgroundColor: Brand.dark, title: Text(tl('Add account'))) : null,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

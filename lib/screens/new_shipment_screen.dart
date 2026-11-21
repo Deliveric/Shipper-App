@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/api.dart';
+import '../core/session.dart';
 import '../core/data.dart';
 import '../core/strings.dart';
 import '../core/theme.dart';
@@ -23,6 +24,7 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
   String _cost = '';
   bool _busy = false, _loaded = false;
   String? _error;
+  late Account _acc = Session.I.active.first;
 
   @override
   void initState() {
@@ -32,8 +34,8 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
 
   Future<void> _load() async {
     try {
-      final s = Api.listOf(await Api.get('sectors.php'));
-      final t = Api.listOf(await Api.get('service_types.php'));
+      final s = Api.listOf(await Api.get('sectors.php', null, _acc.token));
+      final t = Api.listOf(await Api.get('service_types.php', null, _acc.token));
       if (mounted) setState(() { _sectors = s; _types = t; _loaded = true; });
     } catch (e) {
       if (mounted) setState(() { _error = 'Could not load areas: $e'; _loaded = true; });
@@ -87,7 +89,7 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
     setState(() { _sector = id; _cost = ''; });
     if (id == null) return;
     try {
-      final r = await Api.get('getDeliveryCost.php', {'sector_id': id, 'lang': 'en'});
+      final r = await Api.get('getDeliveryCost.php', {'sector_id': id, 'lang': 'en'}, _acc.token);
       if (r is Map && mounted) {
         final v = r['delivery_cost'] ?? r['cost'] ?? r['price'] ?? r['data'];
         if (v != null && v is! Map && v is! List) setState(() => _cost = '$v');
@@ -112,7 +114,7 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
         'weight': _weight.text.trim(),
         'quantity': _qty.text.trim(),
         if (_type != null) 'service_type': _type,
-      });
+      }, _acc.token);
       if (!mounted) return;
       String id = '', wb = '';
       Map<String, dynamic> shipment = {};
@@ -141,7 +143,7 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
         }
       }
       if (id.isNotEmpty) {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => ShipmentDetailsScreen(shipment: {...shipment, 'id': id})));
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => ShipmentDetailsScreen(shipment: {...shipment, 'id': id, '_token': _acc.token})));
       } else {
         Navigator.of(context).pop();
       }
@@ -170,6 +172,24 @@ class _NewShipmentScreenState extends State<NewShipmentScreen> {
       body: Form(
         key: _f,
         child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 40), children: [
+          if (Session.I.active.length > 1)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 4),
+              child: DropdownButtonFormField<String>(
+                value: _acc.id,
+                decoration: InputDecoration(labelText: tl('Create under account')),
+                items: [for (final a in Session.I.active) DropdownMenuItem(value: a.id, child: Text(a.title))],
+                onChanged: (v) {
+                  setState(() {
+                    _acc = Session.I.active.firstWhere((a) => a.id == v);
+                    _sector = null;
+                    _cost = '';
+                    _loaded = false;
+                  });
+                  _load();
+                },
+              ),
+            ),
           _field('Customer name', _name, req: true),
           _field('Phone', _p1, req: true, kt: TextInputType.phone),
           _field('Second phone', _p2, kt: TextInputType.phone),

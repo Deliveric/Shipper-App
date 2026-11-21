@@ -43,7 +43,23 @@ class Tx {
 /// Everything the screens show, loaded once and shared.
 class AppData extends ChangeNotifier {
   static final AppData I = AppData._();
-  AppData._();
+  AppData._() {
+    Session.I.addListener(_onSession);
+  }
+
+  String _key = '';
+  void _onSession() {
+    final k = Session.I.active.map((a) => a.id).join(',');
+    if (k == _key) return;
+    _key = k;
+    if (k.isEmpty) {
+      shipments = [];
+      tx = [];
+      notifyListeners();
+    } else {
+      refresh();
+    }
+  }
 
   bool loading = false;
   /// Shipments list shows only "action required" ones (set from Home / the chip).
@@ -75,24 +91,46 @@ class AppData extends ChangeNotifier {
   DateTime? loadedAt;
   String? error;
 
-  Map<String, String> get _hdr => {
-        'Accept': 'application/json',
-        if (Session.I.token != null) 'Authorization': 'Bearer ${Session.I.token}',
-        'Accept-Language': Session.I.locale.languageCode,
-      };
-
   num _n(dynamic v) => v is num ? v : (num.tryParse('$v') ?? 0);
 
+  /// Loads every ticked account in parallel and adds everything together.
   Future<void> refresh() async {
     loading = true;
     error = null;
     notifyListeners();
+    final accs = Session.I.active;
+    final res = await Future.wait(accs.map(_loadOne));
+    shipments = [for (final r in res) ...r.shipments];
+    allCount = res.fold(0, (a, r) => a + r.count);
+    allCod = res.fold<num>(0, (a, r) => a + r.cod);
+    net = res.fold<num>(0, (a, r) => a + r.net);
+    transferable = res.fold<num>(0, (a, r) => a + r.transferable);
+    codCollected = res.fold<num>(0, (a, r) => a + r.codCollected);
+    final dash = <String, num>{};
+    for (final r in res) {
+      for (var i = 0; i < r.dashLabels.length && i < r.dashCounts.length; i++) {
+        dash[r.dashLabels[i]] = (dash[r.dashLabels[i]] ?? 0) + r.dashCounts[i];
+      }
+    }
+    dashLabels = dash.keys.toList();
+    dashCounts = dash.values.toList();
+    tx = [for (final r in res) ...r.tx]..sort((a, b) => b.date.compareTo(a.date));
+    final errs = [for (final r in res) if (r.error != null) accs.length > 1 ? '${r.acc.title}: ${r.error}' : r.error!];
+    error = errs.isEmpty ? null : errs.join('\n');
+    loadedAt = DateTime.now();
+    loading = false;
+    notifyListeners();
+  }
+
+  Future<_AccData> _loadOne(Account acc) async {
+    final d = _AccData(acc);
+    final t = acc.token;
     final lang = Session.I.locale.languageCode;
     Future<void> guard(Future<void> Function() f) async {
       try {
         await f();
       } catch (e) {
-        error ??= '$e';
+        d.error ??= '$e';
       }
     }
 
@@ -100,55 +138,57 @@ class AppData extends ChangeNotifier {
       guard(() async {
         final out = <Map<String, dynamic>>[];
         for (var start = 0;; start += 1000) {
-          final r = await Api.get('my_shipments.php', {'general_status': 'delivere', 'start': '$start', 'limit': '1000', 'lang': lang});
+          final r = await Api.get('my_shipments.php', {'general_status': 'delivere', 'start': '$start', 'limit': '1000', 'lang': lang}, t);
           final l = Api.listOf(r);
           out.addAll(l);
           if (l.length < 1000) break;
         }
-        shipments = out;
+        for (final s in out) {
+          s['_token'] = t;
+          s['_account'] = acc.title;
+        }
+        d.shipments = out;
       }),
       guard(() async {
-        final r = await Api.get('my_shipments.php', {'general_status': 'delivere', 'count': '1'});
+        final r = await Api.get('my_shipments.php', {'general_status': 'delivere', 'count': '1'}, t);
         final i = r is Map ? r['info'] : null;
         if (i is Map) {
-          allCount = _n(i['count']).toInt();
-          allCod = _n(i['sum']);
+          d.count = _n(i['count']).toInt();
+          d.cod = _n(i['sum']);
         }
       }),
       guard(() async {
-        final r = await Api.get('statusDashboard.php');
-        final d = r is Map ? r['statusDashboard'] : null;
-        if (d is Map) {
-          dashLabels = (d['labels'] as List).map((e) => '$e').toList();
-          dashCounts = (d['counts'] as List).map(_n).toList();
+        final r = await Api.get('statusDashboard.php', null, t);
+        final x = r is Map ? r['statusDashboard'] : null;
+        if (x is Map) {
+          d.dashLabels = (x['labels'] as List).map((e) => '$e').toList();
+          d.dashCounts = (x['counts'] as List).map(_n).toList();
         }
       }),
-      guard(() async => net = _n((await Api.get('transactions_sum.php'))['balance'])),
+      guard(() async => d.net = _n((await Api.get('transactions_sum.php', null, t))['balance'])),
       guard(() async {
-        final u = await Api.get('user_info.php');
+        final u = await Api.get('user_info.php', null, t);
         final i = u is Map ? u['userInfo'] : null;
         if (i is Map) {
           final n = '${i['name'] ?? ''}'.trim();
-          await Session.I.setName(n.isNotEmpty ? n : '${i['company_name'] ?? ''}'.trim());
+          await Session.I.setNameFor(t, n.isNotEmpty ? n : '${i['company_name'] ?? ''}'.trim());
         }
       }),
-      guard(() async => transferable = _n((await Api.get('get_withdrawable_amount.php'))['withdrawable_amount'])),
+      guard(() async => d.transferable = _n((await Api.get('get_withdrawable_amount.php', null, t))['withdrawable_amount'])),
       guard(() async {
-        final r = await Api.get('getShipperBalance.php');
+        final r = await Api.get('getShipperBalance.php', null, t);
         final b = r is Map ? r['shipperBalance'] : null;
-        if (b is Map) codCollected = _n(b['cod']);
+        if (b is Map) d.codCollected = _n(b['cod']);
       }),
-      guard(_loadTx),
+      guard(() async => d.tx = await _loadTx(t)),
     ]);
-    loadedAt = DateTime.now();
-    loading = false;
-    notifyListeners();
+    return d;
   }
 
   /// my_transactions.php returns the whole history (tens of MB) newest first and
   /// has no paging, so it is read as a stream and cut off once we have gone back
   /// far enough for the Stats screen (start of month or week) and at least 40 rows.
-  Future<void> _loadTx() async {
+  Future<List<Tx>> _loadTx(String token) async {
     final now = DateTime.now();
     final monthStart = DateTime(now.year, now.month, 1);
     final weekStart = DateTime(now.year, now.month, now.day).subtract(Duration(days: (now.weekday + 1) % 7));
@@ -156,14 +196,14 @@ class AppData extends ChangeNotifier {
     final items = await _streamItems(Api.base + 'my_transactions.php', 'transactions', (m) {
       final t = Tx.from(m);
       return t != null && t.date.isBefore(limit);
-    }, minItems: 40);
-    tx = items.map(Tx.from).whereType<Tx>().toList();
+    }, token, minItems: 40);
+    return items.map(Tx.from).whereType<Tx>().toList();
   }
 
-  Future<List<Map>> _streamItems(String url, String key, bool Function(Map) stopAt, {int minItems = 0}) async {
+  Future<List<Map>> _streamItems(String url, String key, bool Function(Map) stopAt, String token, {int minItems = 0}) async {
     final c = http.Client();
     try {
-      final res = await c.send(http.Request('GET', Uri.parse(url))..headers.addAll(_hdr)).timeout(const Duration(seconds: 90));
+      final res = await c.send(http.Request('GET', Uri.parse(url))..headers.addAll(Api.headersFor(token))).timeout(const Duration(seconds: 90));
       final out = <Map>[];
       var tail = '', inList = false, inStr = false, esc = false, done = false;
       var depth = 0;
@@ -240,4 +280,16 @@ class AppData extends ChangeNotifier {
   }
 
   int delivered(DateTime day) => tx.where((t) => t.isDelivery && t.date.year == day.year && t.date.month == day.month && t.date.day == day.day).length;
+}
+
+class _AccData {
+  final Account acc;
+  _AccData(this.acc);
+  List<Map<String, dynamic>> shipments = [];
+  int count = 0;
+  num cod = 0, net = 0, transferable = 0, codCollected = 0;
+  List<String> dashLabels = [];
+  List<num> dashCounts = [];
+  List<Tx> tx = [];
+  String? error;
 }

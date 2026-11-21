@@ -26,7 +26,7 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
     final id = Api.pick(s, ['id', 'shipment_id']);
     if (id.isEmpty) return;
     try {
-      final r = await Api.post('shipment.php', {'id': id, 'app': 'shipper'});
+      final r = await Api.post('shipment.php', {'id': id, 'app': 'shipper'}, s['_token'] as String?);
       final d = r is Map ? r['shipment'] : null;
       if (d is Map && mounted) {
         setState(() {

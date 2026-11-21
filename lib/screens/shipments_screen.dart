@@ -280,6 +280,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
               ),
               const SizedBox(height: 6),
               Text([Api.name(s), Api.area(s)].where((e) => e.isNotEmpty).join(' · '), style: const TextStyle(fontSize: 12, color: Brand.muted)),
+              if (Session.I.multi && '${s['_account'] ?? ''}'.isNotEmpty) Text('${s['_account']}', style: const TextStyle(fontSize: 11.5, color: Brand.orange)),
               if (Api.pick(s, ['order_id']).isNotEmpty) Text('${tl('Order')} ${Api.pick(s, ['order_id'])}', style: const TextStyle(fontSize: 12, color: Brand.muted)),
               if (AppData.actionStatuses.contains(en))
                 Padding(

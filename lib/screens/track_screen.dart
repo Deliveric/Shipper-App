@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/api.dart';
+import '../core/session.dart';
 import '../core/copy_button.dart';
 import '../core/strings.dart';
 import '../core/theme.dart';
@@ -35,14 +36,16 @@ class _TrackScreenState extends State<TrackScreen> {
       _found = [];
     });
     try {
+      final all = <Map<String, dynamic>>[];
+      for (final acc in Session.I.active) {
       var list = <Map<String, dynamic>>[];
       try {
-        list = Api.listOf(await Api.get('my_shipments.php', {'general_status': 'delivere', 'start': '0', 'limit': '50', 'lang': 'en', 'searchKey': q}));
+        list = Api.listOf(await Api.get('my_shipments.php', {'general_status': 'delivere', 'start': '0', 'limit': '50', 'lang': 'en', 'searchKey': q}, acc.token));
       } catch (_) {}
       if (list.isEmpty) {
         // not among the open shipments: ask the lookup endpoint of the original app
         try {
-          final r = await Api.post('scan_shipment.php', {'waybill': q});
+          final r = await Api.post('scan_shipment.php', {'waybill': q}, acc.token);
           final found = <Map<String, dynamic>>[];
           void take(dynamic v) {
             if (v is Map && (v['waybill'] != null || v['id'] != null)) found.add(Map<String, dynamic>.from(v));
@@ -63,12 +66,18 @@ class _TrackScreenState extends State<TrackScreen> {
           list = found;
         } catch (_) {}
       }
+      for (final x in list) {
+        x['_token'] = acc.token;
+        x['_account'] = acc.title;
+      }
+      all.addAll(list);
+      }
       setState(() {
-        _found = list;
-        if (list.isEmpty) _msg = '${tl('No shipment found for')} "$q"';
+        _found = all;
+        if (all.isEmpty) _msg = '${tl('No shipment found for')} "$q"';
       });
-      if (list.length == 1 && mounted) {
-        Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShipmentDetailsScreen(shipment: list.first)));
+      if (all.length == 1 && mounted) {
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShipmentDetailsScreen(shipment: all.first)));
       }
     } catch (e) {
       setState(() => _msg = '$e');
