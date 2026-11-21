@@ -41,17 +41,15 @@ Future<void> whatsappCustomer(BuildContext context, Map s) async {
   final wa = waNumber(Api.phone(s));
   if (wa.isEmpty) return;
   final name = Api.name(s);
-  final waybill = Api.code(s);
   final product = Api.pick(s, ['product_name']);
-  final orderNo = Api.pick(s, ['order_id'], waybill);
-  final prod = product.isEmpty ? '' : ' ($product)';
   final merchant = '${s['_account'] ?? Session.I.userName ?? ''}';
+  // merchant's own Order ID only; without it the message just says "your order" (no waybill number)
+  final orderNo = Api.pick(s, ['order_id']);
+  final head = 'أهلاً $name 👋 معاك $merchant.\n${orderNo.isEmpty ? 'بخصوص طلب حضرتك' : 'بخصوص طلبك رقم $orderNo'}'
+      '${product.isEmpty ? '' : '\nحضرتك كنت طالب\n($product)'}';
   final msgs = <(String, String)>[
-    (
-      'Confirm purchase',
-      'أهلاً $name 👋 معاك $merchant.\nبخصوص طلبك رقم $orderNo${product.isEmpty ? '' : '\nحضرتك كنت طالب\n($product)'}،\nلسه عايز تستلمه؟ لو آه رد بـ "نعم" وهنرتب التسليم، ولو لأ رد بـ "لا".'
-    ),
-    ('No answer', 'أهلاً $name، معاك $merchant. المندوب حاول يتواصل معاك بخصوص طلب $waybill$prod ومردتش. إمتى يناسبك تستلمه؟'),
+    ('Confirm purchase', '$head،\nلسه عايز تستلمه؟ لو آه رد بـ "نعم" وهنرتب التسليم، ولو لأ رد بـ "لا".'),
+    ('No answer', '$head،\nالمندوب حاول يتواصل معاك ومردتش. إمتى يناسبك تستلمه؟'),
   ];
   final pick = await showModalBottomSheet<String>(
     context: context,
