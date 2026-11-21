@@ -49,7 +49,7 @@ Future<void> whatsappCustomer(BuildContext context, Map s) async {
   final head = 'أهلاً $name 👋 معاك $merchant.\n${orderNo.isEmpty ? 'بخصوص طلب حضرتك' : 'بخصوص طلبك رقم $orderNo'}'
       '${product.isEmpty ? '' : '\nحضرتك كنت طالب\n($product)'}';
   final msgs = <(String, String)>[
-    ('Confirm purchase', '$head،\nلسه عايز تستلمه؟ لو آه رد بـ "نعم" وهنرتب التسليم، ولو لأ رد بـ "لا".'),
+    ('Confirm purchase', '$head،\nلسه عايز تستلمه؟ لو آه رد بـ "نعم" وهنرتب التسليم، ولو لأ رد بـ "لا" وقولنا لو في مشكلة واجهت حضرتك.'),
     ('No answer', '$head،\nالمندوب حاول يتواصل معاك ومردتش. إمتى يناسبك تستلمه؟'),
   ];
   final pick = await showModalBottomSheet<String>(
