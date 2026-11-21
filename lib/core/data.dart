@@ -52,13 +52,15 @@ class AppData extends ChangeNotifier {
     final k = Session.I.active.map((a) => a.id).join(',');
     if (k == _key) return;
     _key = k;
-    if (k.isEmpty) {
-      shipments = [];
-      tx = [];
-      notifyListeners();
-    } else {
-      refresh();
-    }
+    // drop the old figures at once so numbers of another selection never show
+    shipments = [];
+    tx = [];
+    allCount = 0;
+    allCod = net = transferable = codCollected = 0;
+    dashLabels = [];
+    dashCounts = [];
+    notifyListeners();
+    if (k.isNotEmpty) refresh();
   }
 
   bool loading = false;
@@ -94,12 +96,15 @@ class AppData extends ChangeNotifier {
   num _n(dynamic v) => v is num ? v : (num.tryParse('$v') ?? 0);
 
   /// Loads every ticked account in parallel and adds everything together.
+  int _gen = 0;
   Future<void> refresh() async {
+    final gen = ++_gen;
     loading = true;
     error = null;
     notifyListeners();
     final accs = Session.I.active;
     final res = await Future.wait(accs.map(_loadOne));
+    if (gen != _gen) return; // a newer refresh (other accounts) is running; ignore this one
     shipments = [for (final r in res) ...r.shipments];
     allCount = res.fold(0, (a, r) => a + r.count);
     allCod = res.fold<num>(0, (a, r) => a + r.cod);

@@ -25,7 +25,7 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   Widget _accountBar() => Padding(
-        padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+        padding: const EdgeInsets.fromLTRB(14, 22, 14, 4),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(children: [
@@ -35,6 +35,10 @@ class _HomeShellState extends State<HomeShell> {
                 label: Text('${tl('All')} (${Session.I.accounts.length})'),
                 selected: Session.I.active.length == Session.I.accounts.length,
                 selectedColor: Brand.orange,
+                elevation: 0,
+                pressElevation: 0,
+                shadowColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
                 onSelected: (_) => Session.I.selectAll(),
               ),
             ),
@@ -45,6 +49,10 @@ class _HomeShellState extends State<HomeShell> {
                   label: Text(a.title),
                   selected: Session.I.active.length == 1 && Session.I.isSelected(a.id),
                   selectedColor: Brand.orange,
+                elevation: 0,
+                pressElevation: 0,
+                shadowColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
                   onSelected: (_) => Session.I.only(a.id),
                 ),
               ),
@@ -77,7 +85,7 @@ class _HomeShellState extends State<HomeShell> {
         child: Column(children: [
           ListenableBuilder(
             listenable: Session.I,
-            builder: (context, _) => Session.I.accounts.length > 1 ? _accountBar() : const SizedBox.shrink(),
+            builder: (context, _) => Session.I.multi ? _accountBar() : const SizedBox.shrink(),
           ),
           Expanded(child: IndexedStack(index: _i, children: pages)),
         ]),
