@@ -52,15 +52,14 @@ class AppData extends ChangeNotifier {
     final k = Session.I.active.map((a) => a.id).join(',');
     if (k == _key) return;
     _key = k;
-    // drop the old figures at once so numbers of another selection never show
-    shipments = [];
-    tx = [];
-    allCount = 0;
-    allCod = net = transferable = codCollected = 0;
-    dashLabels = [];
-    dashCounts = [];
-    notifyListeners();
-    if (k.isNotEmpty) refresh();
+    if (k.isEmpty) {
+      _gen++;
+      _clear();
+      loading = false;
+      notifyListeners();
+    } else {
+      refresh(force: false);
+    }
   }
 
   bool loading = false;
@@ -95,16 +94,20 @@ class AppData extends ChangeNotifier {
 
   num _n(dynamic v) => v is num ? v : (num.tryParse('$v') ?? 0);
 
-  /// Loads every ticked account in parallel and adds everything together.
-  int _gen = 0;
-  Future<void> refresh() async {
-    final gen = ++_gen;
-    loading = true;
-    error = null;
-    notifyListeners();
-    final accs = Session.I.active;
-    final res = await Future.wait(accs.map(_loadOne));
-    if (gen != _gen) return; // a newer refresh (other accounts) is running; ignore this one
+  /// Per-account data kept in memory, so switching between accounts is instant.
+  final Map<String, _AccData> _cache = {};
+  final Map<String, DateTime> _cacheAt = {};
+
+  void _clear() {
+    shipments = [];
+    tx = [];
+    allCount = 0;
+    allCod = net = transferable = codCollected = 0;
+    dashLabels = [];
+    dashCounts = [];
+  }
+
+  void _apply(List<_AccData> res) {
     shipments = [for (final r in res) ...r.shipments];
     allCount = res.fold(0, (a, r) => a + r.count);
     allCod = res.fold<num>(0, (a, r) => a + r.cod);
@@ -120,7 +123,44 @@ class AppData extends ChangeNotifier {
     dashLabels = dash.keys.toList();
     dashCounts = dash.values.toList();
     tx = [for (final r in res) ...r.tx]..sort((a, b) => b.date.compareTo(a.date));
-    final errs = [for (final r in res) if (r.error != null) accs.length > 1 ? '${r.acc.title}: ${r.error}' : r.error!];
+  }
+
+  /// Loads the ticked accounts in parallel and adds everything together.
+  /// force=false (switching accounts): accounts already loaded are shown at once
+  /// and only refreshed if older than 2 minutes.
+  int _gen = 0;
+  Future<void> refresh({bool force = true}) async {
+    final gen = ++_gen;
+    final accs = Session.I.active;
+    final allCached = accs.isNotEmpty && accs.every((a) => _cache.containsKey(a.token));
+    if (allCached && !force) {
+      _apply([for (final a in accs) _cache[a.token]!]);
+    } else {
+      _clear();
+    }
+    final now = DateTime.now();
+    final stale = accs.where((a) => force || !_cache.containsKey(a.token) || now.difference(_cacheAt[a.token]!) > const Duration(minutes: 2)).toList();
+    if (stale.isEmpty) {
+      loading = false;
+      notifyListeners();
+      return;
+    }
+    loading = true;
+    error = null;
+    notifyListeners();
+    final fresh = await Future.wait(stale.map(_loadOne));
+    for (final f in fresh) {
+      if (f.error == null) {
+        _cache[f.acc.token] = f;
+        _cacheAt[f.acc.token] = DateTime.now();
+      }
+    }
+    if (gen != _gen) return; // a newer refresh (other accounts) is running; ignore this one
+    final res = [
+      for (final a in accs) fresh.firstWhere((f) => f.acc.token == a.token, orElse: () => _cache[a.token]!),
+    ];
+    _apply(res);
+    final errs = [for (final r in fresh) if (r.error != null) accs.length > 1 ? '${r.acc.title}: ${r.error}' : r.error!];
     error = errs.isEmpty ? null : errs.join('\n');
     loadedAt = DateTime.now();
     loading = false;

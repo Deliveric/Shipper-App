@@ -178,15 +178,6 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
                     Text('COD ${fmt(cod)} ${tl('EGP')}', style: const TextStyle(color: Brand.muted, fontSize: 12)),
                   ]),
                 ),
-              if (AppData.I.loading && all.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 60),
-                  child: Column(children: [
-                    const SizedBox(width: 46, height: 46, child: CircularProgressIndicator(color: Brand.orange, strokeWidth: 4)),
-                    const SizedBox(height: 14),
-                    Text(tl('Loading shipments…'), style: const TextStyle(color: Brand.muted)),
-                  ]),
-                ),
               if (!AppData.I.loading && view.isEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 40),

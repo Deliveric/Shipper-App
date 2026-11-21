@@ -87,7 +87,31 @@ class _HomeShellState extends State<HomeShell> {
             listenable: Session.I,
             builder: (context, _) => Session.I.combinedMode ? _accountBar() : const SizedBox.shrink(),
           ),
-          Expanded(child: IndexedStack(index: _i, children: pages)),
+          Expanded(
+            child: Stack(children: [
+              IndexedStack(index: _i, children: pages),
+              // big spinner while there is nothing to show yet (first load or a not-yet-loaded account)
+              ListenableBuilder(
+                listenable: AppData.I,
+                builder: (context, _) {
+                  final d = AppData.I;
+                  if (!d.loading || _i == 4 || d.shipments.isNotEmpty || d.tx.isNotEmpty || d.net != 0) return const SizedBox.shrink();
+                  final label = ['Loading shipments…', 'Loading wallet…', 'Loading home…', 'Loading stats…'][_i];
+                  return Positioned.fill(
+                    child: Container(
+                      color: Brand.dark.withOpacity(.92),
+                      alignment: Alignment.center,
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        const SizedBox(width: 46, height: 46, child: CircularProgressIndicator(color: Brand.orange, strokeWidth: 4)),
+                        const SizedBox(height: 14),
+                        Text(tl(label), style: const TextStyle(color: Brand.muted)),
+                      ]),
+                    ),
+                  );
+                },
+              ),
+            ]),
+          ),
         ]),
       ),
       bottomNavigationBar: ListenableBuilder(
