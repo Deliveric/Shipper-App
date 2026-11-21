@@ -21,9 +21,9 @@ class ReportsScreen extends StatelessWidget {
         final weekStart = today.subtract(Duration(days: (now.weekday + 1) % 7)); // weeks start on Saturday
         final monthStart = DateTime(now.year, now.month, 1);
         final periods = [
-          (tl('Today'), '${today.day}/${today.month}', today),
-          (tl('This week'), '${tl('from')} ${weekStart.day}/${weekStart.month}', weekStart),
-          (tl('This month'), '${tl('from')} 1/${now.month}', monthStart),
+          (tl('Today'), '${today.day}/${today.month}/${today.year}', today),
+          (tl('This week'), '${tl('from')} ${weekStart.day}/${weekStart.month}/${weekStart.year}', weekStart),
+          (tl('This month'), '${tl('from')} 1/${now.month}/${now.year}', monthStart),
         ];
         final last7 = [for (var i = 6; i >= 0; i--) today.subtract(Duration(days: i))];
         final counts = last7.map(d.delivered).toList();
