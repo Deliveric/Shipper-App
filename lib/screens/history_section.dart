@@ -190,7 +190,6 @@ class _HistorySectionState extends State<HistorySection> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         Flexible(child: Text(title, style: const TextStyle(fontSize: 11.5, color: Brand.muted))),
-        if (overall != null && v.length > 1) _trend(overall, '${_label(keys.first)} → ${_label(keys.last)}'),
       ]),
       const SizedBox(height: 4),
       LayoutBuilder(builder: (context, c) {
