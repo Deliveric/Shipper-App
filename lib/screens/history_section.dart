@@ -14,13 +14,12 @@ class HistorySection extends StatefulWidget {
 
 class _HistorySectionState extends State<HistorySection> {
   bool _years = false;
-  int _metric = 0; // 0 delivered, 1 COD, 2 fees
   String? _sel; // selected period key
   final _scroll = ScrollController();
 
   static const _mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  num _val(MonthStat s) => _metric == 0 ? s.delivered : (_metric == 1 ? s.cod : s.fees);
+  num _net(MonthStat s) => s.cod - s.fees; // net profit = COD collected - shipping fees
 
   /// ordered (oldest first) list of period key -> totals
   List<MapEntry<String, MonthStat>> _periods(Map<String, MonthStat> m) {
@@ -72,13 +71,12 @@ class _HistorySectionState extends State<HistorySection> {
     final keys = ps.map((e) => e.key).toList();
     final sel = (_sel != null && keys.contains(_sel)) ? _sel! : keys.last;
     final si = keys.indexOf(sel);
-    final vals = ps.map((e) => _val(e.value)).toList();
+    final cnt = ps.map((e) => e.value.delivered).toList();
+    final net = ps.map((e) => _net(e.value)).toList();
     final cur = ps[si].value;
-    final curV = vals[si];
-    final prevV = si > 0 ? vals[si - 1] : null;
-    final pct = (prevV == null || prevV == 0) ? null : (curV - prevV) / prevV * 100;
-    final first = vals.first, last = vals.last;
-    final overall = first == 0 ? null : (last - first) / first * 100;
+    double? chg(List<num> v, int i) => (i == 0 || v[i - 1] == 0) ? null : (v[i] - v[i - 1]) / v[i - 1] * 100;
+    double? overall(List<num> v) => v.first == 0 ? null : (v.last - v.first) / v.first * 100;
+    final pct = chg(cnt, si);
 
     Widget seg(String t, bool on, VoidCallback f) => Expanded(
           child: GestureDetector(
@@ -108,25 +106,6 @@ class _HistorySectionState extends State<HistorySection> {
               })),
         ]),
       ),
-      const SizedBox(height: 10),
-      SizedBox(
-        height: 36,
-        child: ListView(scrollDirection: Axis.horizontal, children: [
-          for (final (i, t) in [tl('Delivered'), tl('COD collected'), tl('Shipping fees')].indexed)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                label: Text(t),
-                selected: _metric == i,
-                selectedColor: Brand.orange,
-                backgroundColor: Brand.card,
-                side: BorderSide.none,
-                labelStyle: TextStyle(fontSize: 12, color: _metric == i ? Brand.dark : Brand.text, fontWeight: FontWeight.w600),
-                onSelected: (_) => setState(() => _metric = i),
-              ),
-            ),
-        ]),
-      ),
       const SizedBox(height: 8),
       // slider of periods, newest first
       SizedBox(
@@ -149,8 +128,12 @@ class _HistorySectionState extends State<HistorySection> {
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                   Text(_label(e.key), style: TextStyle(fontSize: 12, color: e.key == sel ? Brand.orange : Brand.muted, fontWeight: FontWeight.w600)),
-                  Text(fmt(_val(e.value)), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                  Text('${e.value.delivered} ${tl('delivered')}', style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
+                  Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                    Text('${e.value.delivered}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                    const SizedBox(width: 4),
+                    Padding(padding: const EdgeInsets.only(bottom: 2), child: Text(tl('shipments'), style: const TextStyle(fontSize: 10.5, color: Brand.muted))),
+                  ]),
+                  Text('${fmt(_net(e.value))} ${tl('EGP')}', style: const TextStyle(fontSize: 10.5, color: Color(0xFF5BC47A), fontWeight: FontWeight.w600)),
                 ]),
               ),
             ),
@@ -169,16 +152,15 @@ class _HistorySectionState extends State<HistorySection> {
           const SizedBox(height: 4),
           Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Text('${cur.delivered}', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Brand.orange)),
-            const SizedBox(width: 6),
-            Padding(padding: const EdgeInsets.only(bottom: 6), child: Text(tl('delivered'), style: const TextStyle(color: Brand.muted, fontSize: 13))),
+            const Padding(padding: EdgeInsets.fromLTRB(6, 0, 6, 6), child: Text('/', style: TextStyle(fontSize: 24, color: Brand.muted))),
+            Text('${cur.returned}', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Brand.red)),
           ]),
+          Text('${tl('Delivered')} / ${tl('Returned')} (${tl('shipments')})', style: const TextStyle(color: Brand.muted, fontSize: 12)),
           const SizedBox(height: 10),
           Row(children: [
-            _mini(tl('COD collected'), fmt(cur.cod)),
+            _mini(tl('COD collected'), '${fmt(cur.cod)} ${tl('EGP')}'),
             const SizedBox(width: 8),
-            _mini(tl('Shipping fees'), fmt(cur.fees)),
-            const SizedBox(width: 8),
-            _mini(tl('Returned'), '${cur.returned}'),
+            _mini(tl('Net profit'), '${fmt(_net(cur))} ${tl('EGP')}', green: true, note: tl('COD − shipping fees')),
           ]),
         ]),
       ),
@@ -188,30 +170,11 @@ class _HistorySectionState extends State<HistorySection> {
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
         decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(18)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(tl('Growth curve'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-            if (overall != null && vals.length > 1) _trend(overall, '${_label(keys.first)} → ${_label(keys.last)}'),
-          ]),
+          Text(tl('Growth curve'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
           const SizedBox(height: 10),
-          LayoutBuilder(builder: (context, c) {
-            void pick(double dx) {
-              final n = keys.length;
-              final i = n == 1 ? 0 : (((dx - 6) / (c.maxWidth - 12)) * (n - 1)).round().clamp(0, n - 1);
-              setState(() => _sel = keys[i]);
-              _follow(n - 1 - i); // the slider (newest first) moves with the curve
-            }
-
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTapDown: (d) => pick(d.localPosition.dx),
-              onHorizontalDragUpdate: (d) => pick(d.localPosition.dx),
-              child: SizedBox(
-                height: 170,
-                width: double.infinity,
-                child: CustomPaint(painter: _CurvePainter(vals.map((e) => e.toDouble()).toList(), si, '${_label(sel, full: true)}\n${fmt(curV)}')),
-              ),
-            );
-          }),
+          _chart(tl('Shipments delivered (count)'), cnt.map((e) => e.toDouble()).toList(), keys, si, overall(cnt), (i) => '${fmt(cnt[i])} ${tl('shipments')}'),
+          const SizedBox(height: 14),
+          _chart(tl('Net profit (EGP)'), net.map((e) => e.toDouble()).toList(), keys, si, overall(net), (i) => '${fmt(net[i])} ${tl('EGP')}'),
           const SizedBox(height: 6),
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(_label(keys.first), style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
@@ -220,6 +183,35 @@ class _HistorySectionState extends State<HistorySection> {
           ]),
         ]),
       ),
+    ]);
+  }
+
+  Widget _chart(String title, List<double> v, List<String> keys, int si, double? overall, String Function(int) tipOf) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Flexible(child: Text(title, style: const TextStyle(fontSize: 11.5, color: Brand.muted))),
+        if (overall != null && v.length > 1) _trend(overall, '${_label(keys.first)} → ${_label(keys.last)}'),
+      ]),
+      const SizedBox(height: 4),
+      LayoutBuilder(builder: (context, c) {
+        void pick(double dx) {
+          final n = keys.length;
+          final i = n == 1 ? 0 : (((dx - 6) / (c.maxWidth - 12)) * (n - 1)).round().clamp(0, n - 1);
+          setState(() => _sel = keys[i]);
+          _follow(n - 1 - i); // the slider (newest first) moves with the curves
+        }
+
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (d) => pick(d.localPosition.dx),
+          onHorizontalDragUpdate: (d) => pick(d.localPosition.dx),
+          child: SizedBox(
+            height: 150,
+            width: double.infinity,
+            child: CustomPaint(painter: _CurvePainter(v, si, '${_label(keys[si], full: true)}\n${tipOf(si)}')),
+          ),
+        );
+      }),
     ]);
   }
 
@@ -234,13 +226,14 @@ class _HistorySectionState extends State<HistorySection> {
     ]);
   }
 
-  Widget _mini(String k, String v) => Expanded(
+  Widget _mini(String k, String v, {bool green = false, String? note}) => Expanded(
         child: Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: Brand.card2, borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(color: green ? const Color(0xFF2C3A2C) : Brand.card2, borderRadius: BorderRadius.circular(12)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(k, style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
-            Text(v, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            Text(v, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: green ? const Color(0xFF5BC47A) : null)),
+            if (note != null) Text(note, style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
           ]),
         ),
       );

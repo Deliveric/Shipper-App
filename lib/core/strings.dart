@@ -88,6 +88,10 @@ String tr(BuildContext c, String key) {
 
 /// English text -> Arabic. Screens call t('English text'); English stays as is.
 const _ar = <String, String>{
+  'Net profit': 'صافي الربح',
+  'Net profit (EGP)': 'صافي الربح (جنيه)',
+  'COD − shipping fees': 'التحصيل − مصاريف الشحن',
+  'Shipments delivered (count)': 'عدد الشحنات المسلّمة',
   'Months': 'الشهور',
   'Years': 'السنين',
   'Growth curve': 'منحنى النمو',
