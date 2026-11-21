@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:simple_icons/simple_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'api.dart';
 import 'session.dart';
@@ -62,7 +61,7 @@ Future<void> whatsappCustomer(BuildContext context, Map s) async {
             Card(
               color: Brand.card2,
               child: ListTile(
-                leading: const Icon(SimpleIcons.whatsapp, color: Brand.green),
+                leading: Image.asset('assets/image/whatsapp.png', width: 30, height: 30),
                 title: Text(tl(m.$1), style: const TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: Padding(padding: const EdgeInsets.only(top: 4), child: Text(m.$2, style: const TextStyle(fontSize: 12.5, color: Brand.muted))),
                 onTap: () => Navigator.pop(c, m.$2),
@@ -96,7 +95,11 @@ class ContactButtons extends StatelessWidget {
     return Row(mainAxisSize: MainAxisSize.min, children: [
       btn(const Icon(Icons.call, size: 19, color: Brand.orange), Colors.transparent, Brand.orange, () => callCustomer(phone)),
       const SizedBox(width: 8),
-      btn(const Icon(SimpleIcons.whatsapp, size: 21, color: Colors.white), Brand.green, Brand.green, () => whatsappCustomer(context, s)),
+      GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => whatsappCustomer(context, s),
+        child: Image.asset('assets/image/whatsapp.png', width: 38, height: 38),
+      ),
     ]);
   }
 }
