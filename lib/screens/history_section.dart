@@ -68,8 +68,17 @@ class _HistorySectionState extends State<HistorySection> {
             const SizedBox(width: 38, height: 38, child: CircularProgressIndicator(color: Brand.orange, strokeWidth: 4)),
             const SizedBox(height: 12),
             Text(tl('Loading history… the first time takes a minute'), textAlign: TextAlign.center, style: const TextStyle(color: Brand.muted, fontSize: 12.5)),
-          ] else
+          ] else ...[
             Text(tl('No history yet'), style: const TextStyle(color: Brand.muted)),
+            if (d.historyError != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(d.historyError!, textAlign: TextAlign.center, style: const TextStyle(color: Brand.red, fontSize: 11))),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(backgroundColor: Brand.orange, foregroundColor: Brand.dark),
+              onPressed: () => d.loadHistory(force: true),
+              icon: const Icon(Icons.download),
+              label: Text(tl('Load history')),
+            ),
+          ],
         ]),
       );
     }

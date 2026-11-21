@@ -333,6 +333,7 @@ class AppData extends ChangeNotifier {
   final Map<String, Map<String, MonthStat>> _hist = {}; // account token -> 'yyyy-MM' -> totals
   final Set<String> _histFresh = {};
   bool historyLoading = false, historyWanted = false;
+  String? historyError;
   int _histGen = 0;
 
   /// monthly totals of the accounts shown now, added together
@@ -369,6 +370,7 @@ class AppData extends ChangeNotifier {
       return;
     }
     historyLoading = true;
+    historyError = null;
     notifyListeners();
     await Future.wait(todo.map((a) async {
       try {
@@ -390,7 +392,9 @@ class AppData extends ChangeNotifier {
         _hist[a.token] = m;
         _histFresh.add(a.token);
         await p?.setString('hist_${a.id}', jsonEncode({for (final e in m.entries) e.key: e.value.toJson()}));
-      } catch (_) {}
+      } catch (e) {
+        historyError = '$e';
+      }
     }));
     if (gen == _histGen) historyLoading = false;
     notifyListeners();
