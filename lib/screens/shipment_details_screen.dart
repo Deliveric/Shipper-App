@@ -45,7 +45,15 @@ class _ShipmentDetailsScreenState extends State<ShipmentDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final phone = Api.phone(s);
-    final wa = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    // WhatsApp needs the country code: 01200221822 -> 201200221822 (Egypt).
+    var wa = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (wa.startsWith('00')) {
+      wa = wa.substring(2);
+    } else if (wa.startsWith('0')) {
+      wa = '20${wa.substring(1)}';
+    } else if (wa.length == 10 && wa.startsWith('1')) {
+      wa = '20$wa';
+    }
     return Scaffold(
       appBar: AppBar(title: Text(tr(context, 'details'))),
       body: ListView(
