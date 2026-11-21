@@ -1,10 +1,31 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'api.dart';
 import 'session.dart';
 import 'strings.dart';
 import 'util.dart';
+
+/// one month of delivered / returned figures
+class MonthStat {
+  int delivered = 0, returned = 0;
+  num cod = 0, fees = 0;
+  MonthStat();
+  void add(MonthStat o) {
+    delivered += o.delivered;
+    returned += o.returned;
+    cod += o.cod;
+    fees += o.fees;
+  }
+
+  List<num> toJson() => [delivered, returned, cod, fees];
+  static MonthStat from(List l) => MonthStat()
+    ..delivered = (l[0] as num).toInt()
+    ..returned = (l[1] as num).toInt()
+    ..cod = l[2] as num
+    ..fees = l[3] as num;
+}
 
 class Tx {
   final int id;
@@ -59,6 +80,7 @@ class AppData extends ChangeNotifier {
       notifyListeners();
     } else {
       refresh(force: false);
+      if (historyWanted) loadHistory();
     }
   }
 
@@ -244,7 +266,7 @@ class AppData extends ChangeNotifier {
     return items.map(Tx.from).whereType<Tx>().toList();
   }
 
-  Future<List<Map>> _streamItems(String url, String key, bool Function(Map) stopAt, String token, {int minItems = 0}) async {
+  Future<List<Map>> _streamItems(String url, String key, bool Function(Map) stopAt, String token, {int minItems = 0, void Function(Map)? onItem}) async {
     final c = http.Client();
     try {
       final res = await c.send(http.Request('GET', Uri.parse(url))..headers.addAll(Api.headersFor(token))).timeout(const Duration(seconds: 90));
@@ -288,7 +310,11 @@ class AppData extends ChangeNotifier {
             depth--;
             if (depth == 0) {
               final m = jsonDecode(cur.toString()) as Map;
-              out.add(m);
+              if (onItem != null) {
+                onItem(m);
+              } else {
+                out.add(m);
+              }
               if (out.length >= minItems && stopAt(m)) done = true;
             }
           }
@@ -299,6 +325,75 @@ class AppData extends ChangeNotifier {
     } finally {
       c.close();
     }
+  }
+
+  // ---- month by month history (Stats screen) ----
+  // The whole transaction history is read once per session as a stream and only the
+  // monthly totals are kept (and saved on the device so the next start shows them at once).
+  final Map<String, Map<String, MonthStat>> _hist = {}; // account token -> 'yyyy-MM' -> totals
+  final Set<String> _histFresh = {};
+  bool historyLoading = false, historyWanted = false;
+  int _histGen = 0;
+
+  /// monthly totals of the accounts shown now, added together
+  Map<String, MonthStat> get monthly {
+    final out = <String, MonthStat>{};
+    for (final a in Session.I.active) {
+      (_hist[a.token] ?? const <String, MonthStat>{}).forEach((k, v) => (out[k] ??= MonthStat()).add(v));
+    }
+    return out;
+  }
+
+  Future<void> loadHistory({bool force = false}) async {
+    historyWanted = true;
+    final gen = ++_histGen;
+    final accs = Session.I.active;
+    SharedPreferences? p;
+    try {
+      p = await SharedPreferences.getInstance();
+    } catch (_) {}
+    for (final a in accs) {
+      if (_hist.containsKey(a.token) || p == null) continue;
+      try {
+        final raw = p.getString('hist_${a.id}');
+        if (raw != null) {
+          _hist[a.token] = {for (final e in (jsonDecode(raw) as Map).entries) e.key as String: MonthStat.from(e.value as List)};
+        }
+      } catch (_) {}
+    }
+    notifyListeners();
+    final todo = accs.where((a) => force || !_histFresh.contains(a.token)).toList();
+    if (todo.isEmpty) {
+      historyLoading = false;
+      notifyListeners();
+      return;
+    }
+    historyLoading = true;
+    notifyListeners();
+    await Future.wait(todo.map((a) async {
+      try {
+        final m = <String, MonthStat>{};
+        await _streamItems(Api.base + 'my_transactions.php', 'transactions', (_) => false, a.token, onItem: (r) {
+          final t = Tx.from(r);
+          if (t == null) return;
+          if (!t.isDelivery && t.type != '80') return;
+          final k = '${t.date.year}-${t.date.month.toString().padLeft(2, '0')}';
+          final s = m[k] ??= MonthStat();
+          if (t.isDelivery) {
+            s.delivered++;
+            s.cod += t.value;
+            s.fees += t.fee;
+          } else {
+            s.returned++;
+          }
+        });
+        _hist[a.token] = m;
+        _histFresh.add(a.token);
+        await p?.setString('hist_${a.id}', jsonEncode({for (final e in m.entries) e.key: e.value.toJson()}));
+      } catch (_) {}
+    }));
+    if (gen == _histGen) historyLoading = false;
+    notifyListeners();
   }
 
   // ---- derived figures ----

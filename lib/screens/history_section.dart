@@ -1,0 +1,273 @@
+import 'package:flutter/material.dart';
+import '../core/data.dart';
+import '../core/strings.dart';
+import '../core/theme.dart';
+import '../core/util.dart';
+
+/// Stats → "Months": a slider of every past month (or year), the figures of the chosen one
+/// and a curve of the growth / decline over time. Follows the accounts shown (combined too).
+class HistorySection extends StatefulWidget {
+  const HistorySection({super.key});
+  @override
+  State<HistorySection> createState() => _HistorySectionState();
+}
+
+class _HistorySectionState extends State<HistorySection> {
+  bool _years = false;
+  int _metric = 0; // 0 delivered, 1 COD, 2 fees
+  String? _sel; // selected period key
+  final _scroll = ScrollController();
+
+  static const _mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  num _val(MonthStat s) => _metric == 0 ? s.delivered : (_metric == 1 ? s.cod : s.fees);
+
+  /// ordered (oldest first) list of period key -> totals
+  List<MapEntry<String, MonthStat>> _periods(Map<String, MonthStat> m) {
+    if (!_years) return (m.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
+    final y = <String, MonthStat>{};
+    m.forEach((k, v) => (y[k.substring(0, 4)] ??= MonthStat()).add(v));
+    return y.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+  }
+
+  String _label(String k, {bool full = false}) {
+    if (_years) return k;
+    final mo = int.parse(k.substring(5));
+    final y = k.substring(0, 4);
+    return full ? '${tl(_mon[mo - 1])} $y' : '${tl(_mon[mo - 1])} ${y.substring(2)}';
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final d = AppData.I;
+    final ps = _periods(d.monthly);
+    if (ps.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(16)),
+        child: Column(children: [
+          if (d.historyLoading) ...[
+            const SizedBox(width: 38, height: 38, child: CircularProgressIndicator(color: Brand.orange, strokeWidth: 4)),
+            const SizedBox(height: 12),
+            Text(tl('Loading history… the first time takes a minute'), textAlign: TextAlign.center, style: const TextStyle(color: Brand.muted, fontSize: 12.5)),
+          ] else
+            Text(tl('No history yet'), style: const TextStyle(color: Brand.muted)),
+        ]),
+      );
+    }
+    final keys = ps.map((e) => e.key).toList();
+    final sel = (_sel != null && keys.contains(_sel)) ? _sel! : keys.last;
+    final si = keys.indexOf(sel);
+    final vals = ps.map((e) => _val(e.value)).toList();
+    final cur = ps[si].value;
+    final curV = vals[si];
+    final prevV = si > 0 ? vals[si - 1] : null;
+    final pct = (prevV == null || prevV == 0) ? null : (curV - prevV) / prevV * 100;
+    final first = vals.first, last = vals.last;
+    final overall = first == 0 ? null : (last - first) / first * 100;
+
+    Widget seg(String t, bool on, VoidCallback f) => Expanded(
+          child: GestureDetector(
+            onTap: f,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: on ? Brand.orange : Colors.transparent, borderRadius: BorderRadius.circular(10)),
+              child: Text(t, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: on ? Brand.dark : Brand.muted)),
+            ),
+          ),
+        );
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      if (d.historyLoading) const Padding(padding: EdgeInsets.only(bottom: 8), child: LinearProgressIndicator(color: Brand.orange, minHeight: 3)),
+      Container(
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(12)),
+        child: Row(children: [
+          seg(tl('Months'), !_years, () => setState(() {
+                _years = false;
+                _sel = null;
+              })),
+          seg(tl('Years'), _years, () => setState(() {
+                _years = true;
+                _sel = null;
+              })),
+        ]),
+      ),
+      const SizedBox(height: 10),
+      SizedBox(
+        height: 36,
+        child: ListView(scrollDirection: Axis.horizontal, children: [
+          for (final (i, t) in [tl('Delivered'), tl('COD collected'), tl('Shipping fees')].indexed)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(t),
+                selected: _metric == i,
+                selectedColor: Brand.orange,
+                backgroundColor: Brand.card,
+                side: BorderSide.none,
+                labelStyle: TextStyle(fontSize: 12, color: _metric == i ? Brand.dark : Brand.text, fontWeight: FontWeight.w600),
+                onSelected: (_) => setState(() => _metric = i),
+              ),
+            ),
+        ]),
+      ),
+      const SizedBox(height: 8),
+      // slider of periods, newest first
+      SizedBox(
+        height: 92,
+        child: ListView(controller: _scroll, scrollDirection: Axis.horizontal, children: [
+          for (final e in ps.reversed)
+            GestureDetector(
+              onTap: () => setState(() => _sel = e.key),
+              child: Container(
+                width: 112,
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Brand.card,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: e.key == sel ? Brand.orange : Colors.transparent, width: 1.6),
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  Text(_label(e.key), style: TextStyle(fontSize: 12, color: e.key == sel ? Brand.orange : Brand.muted, fontWeight: FontWeight.w600)),
+                  Text(fmt(_val(e.value)), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                  Text('${e.value.delivered} ${tl('delivered')}', style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
+                ]),
+              ),
+            ),
+        ]),
+      ),
+      const SizedBox(height: 12),
+      // chosen period
+      Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(18)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Text(_label(sel, full: true).toUpperCase(), style: const TextStyle(fontSize: 12, color: Brand.muted, letterSpacing: .8)),
+            if (pct != null) _trend(pct, _years ? tl('vs previous year') : tl('vs previous month')),
+          ]),
+          const SizedBox(height: 4),
+          Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Text('${cur.delivered}', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Brand.orange)),
+            const SizedBox(width: 6),
+            Padding(padding: const EdgeInsets.only(bottom: 6), child: Text(tl('delivered'), style: const TextStyle(color: Brand.muted, fontSize: 13))),
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            _mini(tl('COD collected'), fmt(cur.cod)),
+            const SizedBox(width: 8),
+            _mini(tl('Shipping fees'), fmt(cur.fees)),
+            const SizedBox(width: 8),
+            _mini(tl('Returned'), '${cur.returned}'),
+          ]),
+        ]),
+      ),
+      const SizedBox(height: 12),
+      // curve
+      Container(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+        decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(18)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Text(tl('Growth curve'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+            if (overall != null && vals.length > 1) _trend(overall, '${_label(keys.first)} → ${_label(keys.last)}'),
+          ]),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 150,
+            width: double.infinity,
+            child: CustomPaint(painter: _CurvePainter(vals.map((e) => e.toDouble()).toList(), si)),
+          ),
+          const SizedBox(height: 6),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Text(_label(keys.first), style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
+            if (keys.length > 2) Text(_label(keys[keys.length ~/ 2]), style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
+            Text(_label(keys.last), style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
+          ]),
+        ]),
+      ),
+    ]);
+  }
+
+  Widget _trend(double pct, String sub) {
+    final up = pct >= 0;
+    final c = up ? const Color(0xFF5BC47A) : Brand.red;
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(up ? Icons.arrow_upward : Icons.arrow_downward, size: 14, color: c),
+      Text('${pct.abs().toStringAsFixed(0)}%', style: TextStyle(color: c, fontWeight: FontWeight.w700, fontSize: 12.5)),
+      const SizedBox(width: 4),
+      Flexible(child: Text(sub, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Brand.muted, fontSize: 10.5))),
+    ]);
+  }
+
+  Widget _mini(String k, String v) => Expanded(
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: Brand.card2, borderRadius: BorderRadius.circular(12)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(k, style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
+            Text(v, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          ]),
+        ),
+      );
+}
+
+class _CurvePainter extends CustomPainter {
+  final List<double> v;
+  final int sel;
+  _CurvePainter(this.v, this.sel);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (v.isEmpty) return;
+    final mx = v.reduce((a, b) => a > b ? a : b);
+    final top = mx <= 0 ? 1.0 : mx * 1.1;
+    const padX = 6.0, padT = 14.0, padB = 6.0;
+    final w = size.width - padX * 2, h = size.height - padT - padB;
+    Offset pt(int i) => Offset(padX + (v.length == 1 ? w / 2 : w * i / (v.length - 1)), padT + h * (1 - v[i] / top));
+    final grid = Paint()..color = const Color(0x22FFFFFF)..strokeWidth = 1;
+    for (var g = 0; g <= 3; g++) {
+      final y = padT + h * g / 3;
+      canvas.drawLine(Offset(padX, y), Offset(size.width - padX, y), grid);
+    }
+    final pts = [for (var i = 0; i < v.length; i++) pt(i)];
+    final path = Path()..moveTo(pts.first.dx, pts.first.dy);
+    for (var i = 1; i < pts.length; i++) {
+      final a = pts[i - 1], b = pts[i];
+      final mid = (a.dx + b.dx) / 2;
+      path.cubicTo(mid, a.dy, mid, b.dy, b.dx, b.dy); // smooth curve
+    }
+    final fill = Path.from(path)
+      ..lineTo(pts.last.dx, padT + h)
+      ..lineTo(pts.first.dx, padT + h)
+      ..close();
+    canvas.drawPath(
+      fill,
+      Paint()..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Brand.orange.withOpacity(.35), Brand.orange.withOpacity(0)]).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
+    );
+    canvas.drawPath(path, Paint()..color = Brand.orange..style = PaintingStyle.stroke..strokeWidth = 2.5..strokeJoin = StrokeJoin.round);
+    if (v.length <= 24) {
+      for (final p in pts) {
+        canvas.drawCircle(p, 2.6, Paint()..color = Brand.orange);
+      }
+    }
+    final s = pts[sel.clamp(0, pts.length - 1)];
+    canvas.drawCircle(s, 7, Paint()..color = Brand.orange.withOpacity(.25));
+    canvas.drawCircle(s, 4.5, Paint()..color = Brand.orange);
+    canvas.drawCircle(s, 2, Paint()..color = Brand.dark);
+    final tp = TextPainter(text: TextSpan(text: fmt(mx), style: const TextStyle(fontSize: 10, color: Color(0x99FFFFFF))), textDirection: TextDirection.ltr)..layout();
+    tp.paint(canvas, const Offset(padX, 0));
+  }
+
+  @override
+  bool shouldRepaint(_CurvePainter o) => o.v != v || o.sel != sel;
+}

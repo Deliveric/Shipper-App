@@ -60,7 +60,10 @@ class _HomeShellState extends State<HomeShell> {
         ),
       );
 
-  void goTo(int i) => setState(() => _i = i);
+  void goTo(int i) {
+    setState(() => _i = i);
+    if (i == 3) AppData.I.loadHistory(); // month history is only downloaded when Stats is opened
+  }
 
   @override
   Widget build(BuildContext context) {

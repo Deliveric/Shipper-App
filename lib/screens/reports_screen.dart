@@ -3,6 +3,7 @@ import '../core/data.dart';
 import '../core/strings.dart';
 import '../core/theme.dart';
 import '../core/util.dart';
+import 'history_section.dart';
 
 /// "Stats" tab: delivered today / this week / this month, last 7 days, all-time status counts.
 class ReportsScreen extends StatelessWidget {
@@ -32,7 +33,10 @@ class ReportsScreen extends StatelessWidget {
           appBar: AppBar(title: Text(tr(context, 'stats'))),
           body: RefreshIndicator(
             color: Brand.orange,
-            onRefresh: d.refresh,
+            onRefresh: () async {
+              await d.refresh();
+              await d.loadHistory(force: true);
+            },
             child: ListView(padding: const EdgeInsets.fromLTRB(14, 6, 14, 110), children: [
               if (d.loading) const LinearProgressIndicator(color: Brand.orange, minHeight: 3),
               Padding(
@@ -76,6 +80,8 @@ class ReportsScreen extends StatelessWidget {
                   ]),
                 ),
               ),
+              _sec(tl('Months')),
+              const HistorySection(),
             ]),
           ),
         );
