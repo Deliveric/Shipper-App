@@ -81,7 +81,8 @@ class _HistorySectionState extends State<HistorySection> {
     final cur = ps[si].value;
     double? chg(List<num> v, int i) => (i == 0 || v[i - 1] == 0) ? null : (v[i] - v[i - 1]) / v[i - 1] * 100;
     double? overall(List<num> v) => v.first == 0 ? null : (v.last - v.first) / v.first * 100;
-    final pct = chg(cnt, si);
+    final cod = ps.map((e) => e.value.cod).toList();
+    final pctCnt = chg(cnt, si), pctCod = chg(cod, si), pctNet = chg(net, si);
 
     Widget seg(String t, bool on, VoidCallback f) => Expanded(
           child: GestureDetector(
@@ -152,7 +153,7 @@ class _HistorySectionState extends State<HistorySection> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(_label(sel, full: true).toUpperCase(), style: const TextStyle(fontSize: 12, color: Brand.muted, letterSpacing: .8)),
-            if (pct != null) _trend(pct, '${_years ? tl('vs previous year') : tl('vs previous month')}${_isCurrent(sel) ? ' *' : ''}'),
+            if (si > 0) Text('% ${_years ? tl('vs previous year') : tl('vs previous month')}${_isCurrent(sel) ? ' *' : ''}', style: const TextStyle(color: Brand.muted, fontSize: 10.5)),
           ]),
           if (_isCurrent(sel))
             Container(
@@ -175,13 +176,15 @@ class _HistorySectionState extends State<HistorySection> {
             Text('${cur.delivered}', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Brand.orange)),
             const Padding(padding: EdgeInsets.fromLTRB(6, 0, 6, 6), child: Text('/', style: TextStyle(fontSize: 24, color: Brand.muted))),
             Text('${cur.returned}', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Brand.red)),
+            const Spacer(),
+            Padding(padding: const EdgeInsets.only(bottom: 8), child: _pct(pctCnt)),
           ]),
           Text('${tl('Delivered')} / ${tl('Returned')} (${tl('shipments')})', style: const TextStyle(color: Brand.muted, fontSize: 12)),
           const SizedBox(height: 10),
           Row(children: [
-            _mini(tl('COD collected'), '${fmt(cur.cod)} ${tl('EGP')}'),
+            _mini(tl('COD collected'), '${fmt(cur.cod)} ${tl('EGP')}', pct: pctCod),
             const SizedBox(width: 8),
-            _mini(tl('Net profit'), '${fmt(_net(cur))} ${tl('EGP')}', green: true, note: tl('COD − shipping fees')),
+            _mini(tl('Net profit'), '${fmt(_net(cur))} ${tl('EGP')}', green: true, note: tl('COD − shipping fees'), pct: pctNet),
           ]),
         ]),
       ),
@@ -235,6 +238,17 @@ class _HistorySectionState extends State<HistorySection> {
     ]);
   }
 
+  /// small arrow + percentage versus the previous period
+  Widget _pct(double? p) {
+    if (p == null) return const SizedBox.shrink();
+    final up = p >= 0;
+    final c = up ? const Color(0xFF5BC47A) : Brand.red;
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(up ? Icons.arrow_upward : Icons.arrow_downward, size: 14, color: c),
+      Text('${p.abs().toStringAsFixed(0)}%', style: TextStyle(color: c, fontWeight: FontWeight.w700, fontSize: 13)),
+    ]);
+  }
+
   Widget _trend(double pct, String sub) {
     final up = pct >= 0;
     final c = up ? const Color(0xFF5BC47A) : Brand.red;
@@ -246,13 +260,14 @@ class _HistorySectionState extends State<HistorySection> {
     ]);
   }
 
-  Widget _mini(String k, String v, {bool green = false, String? note}) => Expanded(
+  Widget _mini(String k, String v, {bool green = false, String? note, double? pct}) => Expanded(
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(color: green ? const Color(0xFF2C3A2C) : Brand.card2, borderRadius: BorderRadius.circular(12)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(k, style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
             Text(v, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: green ? const Color(0xFF5BC47A) : null)),
+            if (pct != null) Padding(padding: const EdgeInsets.only(top: 2), child: _pct(pct)),
             if (note != null) Text(note, style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
           ]),
         ),
