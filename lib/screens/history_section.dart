@@ -269,18 +269,22 @@ class _HistorySectionState extends State<HistorySection> {
     ]);
   }
 
-  Widget _mini(String k, String v, {bool green = false, String? note, double? pct}) => Expanded(
+  Widget _mini(String k, String v, {bool green = false, String? note, double? pct}) {
+    // growth = green, decline = red: the box and the figure take the colour of the arrow
+    final Color? c = pct == null ? null : (pct >= 0 ? const Color(0xFF5BC47A) : Brand.red);
+    return Expanded(
         child: Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: green ? const Color(0xFF2C3A2C) : Brand.card2, borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(color: c == null ? Brand.card2 : c.withOpacity(.16), borderRadius: BorderRadius.circular(12)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(k, style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
-            Text(v, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: green ? const Color(0xFF5BC47A) : null)),
+            Text(v, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: c)),
             if (pct != null) Padding(padding: const EdgeInsets.only(top: 2), child: _pct(pct)),
             if (note != null) Text(note, style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
           ]),
         ),
       );
+  }
 }
 
 class _CurvePainter extends CustomPainter {
