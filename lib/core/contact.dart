@@ -40,7 +40,8 @@ Future<void> _openWa(String wa, String text) async {
 Future<void> whatsappCustomer(BuildContext context, Map s) async {
   final wa = waNumber(Api.phone(s));
   if (wa.isEmpty) return;
-  final name = Api.name(s);
+  // drop quotes / symbols / spaces around the name and squeeze inner spaces
+  final name = Api.name(s).replaceAll(RegExp(r'^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$', unicode: true), '').replaceAll(RegExp(r'\s+'), ' ');
   final product = Api.pick(s, ['product_name']);
   final merchant = '${s['_account'] ?? Session.I.userName ?? ''}';
   // merchant's own Order ID only; without it the message just says "your order" (no waybill number)
