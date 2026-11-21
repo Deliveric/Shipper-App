@@ -43,14 +43,15 @@ Future<void> whatsappCustomer(BuildContext context, Map s) async {
   // drop quotes / symbols / spaces around the name and squeeze inner spaces
   final name = Api.name(s).replaceAll(RegExp(r'^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$', unicode: true), '').replaceAll(RegExp(r'\s+'), ' ');
   final product = Api.pick(s, ['product_name']);
+  final track = 'لتتبع شحنتك اضغط هنا\nhttps://deliveric.net/index.php?action=search&waybill=${Uri.encodeQueryComponent(Api.code(s))}';
   final merchant = '${s['_account'] ?? Session.I.userName ?? ''}';
   // merchant's own Order ID only; without it the message just says "your order" (no waybill number)
   final orderNo = Api.pick(s, ['order_id']);
   final head = 'أهلاً $name 👋 معاك $merchant.\n${orderNo.isEmpty ? 'بخصوص طلب حضرتك' : 'بخصوص طلبك رقم $orderNo'}'
       '${product.isEmpty ? '' : '\nحضرتك كنت طالب\n($product)'}';
   final msgs = <(String, String)>[
-    ('Confirm purchase', '$head،\nلسه عايز تستلمه؟ لو آه رد بـ "نعم" وهنرتب التسليم، ولو لأ رد بـ "لا" وقولنا لو في مشكلة واجهت حضرتك.'),
-    ('No answer', '$head،\nالمندوب حاول يتواصل معاك ومردتش. إمتى يناسبك تستلمه؟'),
+    ('Confirm purchase', '$head،\nلسه عايز تستلمه؟ لو آه رد بـ "نعم" وهنرتب التسليم، ولو لأ رد بـ "لا" وقولنا لو في مشكلة واجهت حضرتك.\n$track'),
+    ('No answer', '$head،\nالمندوب حاول يتواصل معاك ومردتش. إمتى يناسبك تستلمه؟\n$track'),
   ];
   final pick = await showModalBottomSheet<String>(
     context: context,
