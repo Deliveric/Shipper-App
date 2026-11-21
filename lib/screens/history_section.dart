@@ -182,11 +182,24 @@ class _HistorySectionState extends State<HistorySection> {
             if (overall != null && vals.length > 1) _trend(overall, '${_label(keys.first)} → ${_label(keys.last)}'),
           ]),
           const SizedBox(height: 10),
-          SizedBox(
-            height: 150,
-            width: double.infinity,
-            child: CustomPaint(painter: _CurvePainter(vals.map((e) => e.toDouble()).toList(), si)),
-          ),
+          LayoutBuilder(builder: (context, c) {
+            void pick(double dx) {
+              final n = keys.length;
+              final i = n == 1 ? 0 : (((dx - 6) / (c.maxWidth - 12)) * (n - 1)).round().clamp(0, n - 1);
+              setState(() => _sel = keys[i]);
+            }
+
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: (d) => pick(d.localPosition.dx),
+              onHorizontalDragUpdate: (d) => pick(d.localPosition.dx),
+              child: SizedBox(
+                height: 170,
+                width: double.infinity,
+                child: CustomPaint(painter: _CurvePainter(vals.map((e) => e.toDouble()).toList(), si, '${_label(sel, full: true)}\n${fmt(curV)}')),
+              ),
+            );
+          }),
           const SizedBox(height: 6),
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(_label(keys.first), style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
@@ -224,14 +237,15 @@ class _HistorySectionState extends State<HistorySection> {
 class _CurvePainter extends CustomPainter {
   final List<double> v;
   final int sel;
-  _CurvePainter(this.v, this.sel);
+  final String tip;
+  _CurvePainter(this.v, this.sel, this.tip);
 
   @override
   void paint(Canvas canvas, Size size) {
     if (v.isEmpty) return;
     final mx = v.reduce((a, b) => a > b ? a : b);
     final top = mx <= 0 ? 1.0 : mx * 1.1;
-    const padX = 6.0, padT = 14.0, padB = 6.0;
+    const padX = 6.0, padT = 40.0, padB = 6.0;
     final w = size.width - padX * 2, h = size.height - padT - padB;
     Offset pt(int i) => Offset(padX + (v.length == 1 ? w / 2 : w * i / (v.length - 1)), padT + h * (1 - v[i] / top));
     final grid = Paint()..color = const Color(0x22FFFFFF)..strokeWidth = 1;
@@ -264,10 +278,20 @@ class _CurvePainter extends CustomPainter {
     canvas.drawCircle(s, 7, Paint()..color = Brand.orange.withOpacity(.25));
     canvas.drawCircle(s, 4.5, Paint()..color = Brand.orange);
     canvas.drawCircle(s, 2, Paint()..color = Brand.dark);
-    final tp = TextPainter(text: TextSpan(text: fmt(mx), style: const TextStyle(fontSize: 10, color: Color(0x99FFFFFF))), textDirection: TextDirection.ltr)..layout();
-    tp.paint(canvas, const Offset(padX, 0));
+    // guide line + bubble with the figure of the touched point
+    canvas.drawLine(Offset(s.dx, s.dy), Offset(s.dx, padT + h), Paint()..color = Brand.orange.withOpacity(.4)..strokeWidth = 1);
+    final tp = TextPainter(
+      text: TextSpan(text: tip, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1B1B17), height: 1.25)),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final bw = tp.width + 16, bh = tp.height + 10;
+    final bx = (s.dx - bw / 2).clamp(0.0, size.width - bw);
+    final by = (s.dy - bh - 12).clamp(0.0, size.height);
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(bx, by, bw, bh), const Radius.circular(10)), Paint()..color = Brand.orange);
+    tp.paint(canvas, Offset(bx + 8, by + 5));
   }
 
   @override
-  bool shouldRepaint(_CurvePainter o) => o.v != v || o.sel != sel;
+  bool shouldRepaint(_CurvePainter o) => o.v != v || o.sel != sel || o.tip != tip;
 }
