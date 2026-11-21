@@ -116,39 +116,46 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
         final chosenCod = chosen.fold<num>(0, (a, s) => a + Api.num(Api.cod(s)));
         return Scaffold(
           appBar: AppBar(title: Text(tr(context, 'shipments'))),
-          body: RefreshIndicator(
+          body: Column(children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+              child: Column(children: [
+                if (AppData.I.loading) const Padding(padding: EdgeInsets.only(bottom: 8), child: LinearProgressIndicator(color: Brand.orange, minHeight: 3)),
+                TextField(
+                  controller: _search,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(hintText: tr(context, 'search'), prefixIcon: const Icon(Icons.search)),
+                ),
+                SizedBox(
+                  height: 48,
+                  child: ListView(scrollDirection: Axis.horizontal, children: [
+                    if (AppData.I.actionRequired.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8, top: 6, bottom: 6),
+                        child: ChoiceChip(
+                          label: Text('${tl('Action required')}  ${AppData.I.actionRequired.length}'),
+                          selected: AppData.I.actionOnly,
+                          selectedColor: Brand.red,
+                          labelStyle: TextStyle(fontSize: 12, color: AppData.I.actionOnly ? Brand.dark : Brand.red, fontWeight: FontWeight.w600),
+                          backgroundColor: Brand.card,
+                          side: BorderSide.none,
+                          onSelected: (v) {
+                            setState(() => _status = '');
+                            AppData.I.setActionOnly(v);
+                          },
+                        ),
+                      ),
+                    _chip(tr(context, 'all'), '', all.length),
+                    for (final n in names) _chip(Session.I.locale.languageCode == 'ar' && (arName[n] ?? '').isNotEmpty ? arName[n]! : n, n, counts[n]!),
+                  ]),
+                ),
+              ]),
+            ),
+            Expanded(
+              child: RefreshIndicator(
             color: Brand.orange,
             onRefresh: AppData.I.refresh,
             child: ListView(padding: const EdgeInsets.fromLTRB(12, 4, 12, 110), children: [
-              if (AppData.I.loading) const Padding(padding: EdgeInsets.only(bottom: 8), child: LinearProgressIndicator(color: Brand.orange, minHeight: 3)),
-              TextField(
-                controller: _search,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(hintText: tr(context, 'search'), prefixIcon: const Icon(Icons.search)),
-              ),
-              SizedBox(
-                height: 48,
-                child: ListView(scrollDirection: Axis.horizontal, children: [
-                  if (AppData.I.actionRequired.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8, top: 6, bottom: 6),
-                      child: ChoiceChip(
-                        label: Text('${tl('Action required')}  ${AppData.I.actionRequired.length}'),
-                        selected: AppData.I.actionOnly,
-                        selectedColor: Brand.red,
-                        labelStyle: TextStyle(fontSize: 12, color: AppData.I.actionOnly ? Brand.dark : Brand.red, fontWeight: FontWeight.w600),
-                        backgroundColor: Brand.card,
-                        side: BorderSide.none,
-                        onSelected: (v) {
-                          setState(() => _status = '');
-                          AppData.I.setActionOnly(v);
-                        },
-                      ),
-                    ),
-                  _chip(tr(context, 'all'), '', all.length),
-                  for (final n in names) _chip(Session.I.locale.languageCode == 'ar' && (arName[n] ?? '').isNotEmpty ? arName[n]! : n, n, counts[n]!),
-                ]),
-              ),
               if (_sel.isNotEmpty)
                 Container(
                   margin: const EdgeInsets.only(bottom: 10),
@@ -196,6 +203,8 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
               for (final s in view) _card(s),
             ]),
           ),
+            ),
+          ]),
         );
       },
     );
