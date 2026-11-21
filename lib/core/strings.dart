@@ -88,7 +88,6 @@ String tr(BuildContext c, String key) {
 
 /// English text -> Arabic. Screens call t('English text'); English stays as is.
 const _ar = <String, String>{
-  'Send on WhatsApp': 'ابعت على واتساب',
   'Confirm purchase': 'تأكيد الشراء',
   'No answer': 'العميل مبيردش',
   'Loading shipments…': 'جاري تحميل الشحنات…',
