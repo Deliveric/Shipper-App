@@ -88,6 +88,10 @@ String tr(BuildContext c, String key) {
 
 /// English text -> Arabic. Screens call t('English text'); English stays as is.
 const _ar = <String, String>{
+  'Current month': 'الشهر الحالي',
+  'Current year': 'السنة الحالية',
+  'numbers are up to today': 'الأرقام لغاية النهارده',
+  'The period is not over yet, so they look lower.': 'الفترة لسه ما خلصتش فالأرقام طبيعي تبقى أقل.',
   'Net profit': 'صافي الربح',
   'Net profit (EGP)': 'صافي الربح (جنيه)',
   'COD − shipping fees': 'التحصيل − مصاريف الشحن',

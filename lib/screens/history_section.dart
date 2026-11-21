@@ -29,6 +29,11 @@ class _HistorySectionState extends State<HistorySection> {
     return y.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
   }
 
+  bool _isCurrent(String k) {
+    final n = DateTime.now();
+    return _years ? k == '${n.year}' : k == '${n.year}-${n.month.toString().padLeft(2, '0')}';
+  }
+
   String _label(String k, {bool full = false}) {
     if (_years) return k;
     final mo = int.parse(k.substring(5));
@@ -127,7 +132,7 @@ class _HistorySectionState extends State<HistorySection> {
                   border: Border.all(color: e.key == sel ? Brand.orange : Colors.transparent, width: 1.6),
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Text(_label(e.key), style: TextStyle(fontSize: 12, color: e.key == sel ? Brand.orange : Brand.muted, fontWeight: FontWeight.w600)),
+                  Text(_isCurrent(e.key) ? '${_label(e.key)} *' : _label(e.key), style: TextStyle(fontSize: 12, color: e.key == sel ? Brand.orange : Brand.muted, fontWeight: FontWeight.w600)),
                   Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
                     Text('${e.value.delivered}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                     const SizedBox(width: 4),
@@ -147,8 +152,24 @@ class _HistorySectionState extends State<HistorySection> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(_label(sel, full: true).toUpperCase(), style: const TextStyle(fontSize: 12, color: Brand.muted, letterSpacing: .8)),
-            if (pct != null) _trend(pct, _years ? tl('vs previous year') : tl('vs previous month')),
+            if (pct != null) _trend(pct, '${_years ? tl('vs previous year') : tl('vs previous month')}${_isCurrent(sel) ? ' *' : ''}'),
           ]),
+          if (_isCurrent(sel))
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: const Color(0x22FFB74D), borderRadius: BorderRadius.circular(12)),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Icon(Icons.info_outline, size: 16, color: Color(0xFFFFB74D)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${_years ? tl('Current year') : tl('Current month')} — ${tl('numbers are up to today')} (${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}). ${tl('The period is not over yet, so they look lower.')}',
+                    style: const TextStyle(fontSize: 11.5, color: Color(0xFFFFB74D), height: 1.35),
+                  ),
+                ),
+              ]),
+            ),
           const SizedBox(height: 4),
           Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Text('${cur.delivered}', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Brand.orange)),
@@ -207,7 +228,7 @@ class _HistorySectionState extends State<HistorySection> {
           child: SizedBox(
             height: 150,
             width: double.infinity,
-            child: CustomPaint(painter: _CurvePainter(v, si, '${_label(keys[si], full: true)}\n${tipOf(si)}')),
+            child: CustomPaint(painter: _CurvePainter(v, si, '${_label(keys[si], full: true)}${_isCurrent(keys[si]) ? ' *' : ''}\n${tipOf(si)}')),
           ),
         );
       }),
