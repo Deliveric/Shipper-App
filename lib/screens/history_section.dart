@@ -37,6 +37,14 @@ class _HistorySectionState extends State<HistorySection> {
     return full ? '${tl(_mon[mo - 1])} $y' : '${tl(_mon[mo - 1])} ${y.substring(2)}';
   }
 
+  /// scroll the period slider so card [ri] (position from the left) sits in the middle
+  void _follow(int ri) {
+    if (!_scroll.hasClients) return;
+    final pos = _scroll.position;
+    final target = (ri * 120.0 - (pos.viewportDimension / 2 - 56)).clamp(0.0, pos.maxScrollExtent);
+    _scroll.animateTo(target, duration: const Duration(milliseconds: 140), curve: Curves.easeOut);
+  }
+
   @override
   void dispose() {
     _scroll.dispose();
@@ -126,7 +134,10 @@ class _HistorySectionState extends State<HistorySection> {
         child: ListView(controller: _scroll, scrollDirection: Axis.horizontal, children: [
           for (final e in ps.reversed)
             GestureDetector(
-              onTap: () => setState(() => _sel = e.key),
+              onTap: () {
+                setState(() => _sel = e.key);
+                _follow(ps.length - 1 - keys.indexOf(e.key));
+              },
               child: Container(
                 width: 112,
                 margin: const EdgeInsets.only(right: 8),
@@ -187,6 +198,7 @@ class _HistorySectionState extends State<HistorySection> {
               final n = keys.length;
               final i = n == 1 ? 0 : (((dx - 6) / (c.maxWidth - 12)) * (n - 1)).round().clamp(0, n - 1);
               setState(() => _sel = keys[i]);
+              _follow(n - 1 - i); // the slider (newest first) moves with the curve
             }
 
             return GestureDetector(
