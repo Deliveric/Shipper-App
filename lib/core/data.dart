@@ -127,7 +127,7 @@ class AppData extends ChangeNotifier {
 
   /// Loads the ticked accounts in parallel and adds everything together.
   /// force=false (switching accounts): accounts already loaded are shown at once
-  /// and only refreshed if older than 2 minutes.
+  /// and refreshed in the background.
   int _gen = 0;
   Future<void> refresh({bool force = true}) async {
     final gen = ++_gen;
@@ -138,8 +138,7 @@ class AppData extends ChangeNotifier {
     } else {
       _clear();
     }
-    final now = DateTime.now();
-    final stale = accs.where((a) => force || !_cache.containsKey(a.token) || now.difference(_cacheAt[a.token]!) > const Duration(minutes: 2)).toList();
+    final stale = accs; // always revalidate in the background; cached figures show meanwhile
     if (stale.isEmpty) {
       loading = false;
       notifyListeners();
