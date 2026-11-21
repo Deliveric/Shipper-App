@@ -43,10 +43,14 @@ Future<void> whatsappCustomer(BuildContext context, Map s) async {
   final name = Api.name(s);
   final waybill = Api.code(s);
   final product = Api.pick(s, ['product_name']);
+  final orderNo = Api.pick(s, ['order_id'], waybill);
   final prod = product.isEmpty ? '' : ' ($product)';
   final merchant = '${s['_account'] ?? Session.I.userName ?? ''}';
   final msgs = <(String, String)>[
-    ('Confirm purchase', 'أهلاً $name 👋 معاك $merchant. بخصوص طلبك رقم $waybill$prod، لسه عايز تستلمه؟ لو آه رد بـ "نعم" وهنرتب التسليم، ولو لأ رد بـ "لا".'),
+    (
+      'Confirm purchase',
+      'أهلاً $name 👋 معاك $merchant.\nبخصوص طلبك رقم $orderNo${product.isEmpty ? '' : '\nحضرتك كنت طالب\n($product)'}،\nلسه عايز تستلمه؟ لو آه رد بـ "نعم" وهنرتب التسليم، ولو لأ رد بـ "لا".'
+    ),
     ('No answer', 'أهلاً $name، معاك $merchant. المندوب حاول يتواصل معاك بخصوص طلب $waybill$prod ومردتش. إمتى يناسبك تستلمه؟'),
   ];
   final pick = await showModalBottomSheet<String>(
