@@ -45,7 +45,7 @@ class _HistorySectionState extends State<HistorySection> {
   void _follow(int ri) {
     if (!_scroll.hasClients) return;
     final pos = _scroll.position;
-    final target = (ri * 120.0 - (pos.viewportDimension / 2 - 56)).clamp(0.0, pos.maxScrollExtent);
+    final target = (ri * 150.0 - (pos.viewportDimension / 2 - 56)).clamp(0.0, pos.maxScrollExtent);
     _scroll.animateTo(target, duration: const Duration(milliseconds: 140), curve: Curves.easeOut);
   }
 
@@ -124,7 +124,7 @@ class _HistorySectionState extends State<HistorySection> {
       const SizedBox(height: 8),
       // slider of periods, newest first
       SizedBox(
-        height: 92,
+        height: 112,
         child: ListView(controller: _scroll, scrollDirection: Axis.horizontal, children: [
           for (final e in ps.reversed)
             GestureDetector(
@@ -133,9 +133,9 @@ class _HistorySectionState extends State<HistorySection> {
                 _follow(ps.length - 1 - keys.indexOf(e.key));
               },
               child: Container(
-                width: 112,
+                width: 142,
                 margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                 decoration: BoxDecoration(
                   color: Brand.card,
                   borderRadius: BorderRadius.circular(14),
@@ -143,12 +143,14 @@ class _HistorySectionState extends State<HistorySection> {
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                   Text(_isCurrent(e.key) ? '${_label(e.key)} *' : _label(e.key), style: TextStyle(fontSize: 12, color: e.key == sel ? Brand.orange : Brand.muted, fontWeight: FontWeight.w600)),
-                  Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                    Text('${e.value.delivered}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                    const SizedBox(width: 4),
-                    Padding(padding: const EdgeInsets.only(bottom: 2), child: Text(tl('shipments'), style: const TextStyle(fontSize: 10.5, color: Brand.muted))),
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(tl('Shipments'), style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
+                    Text(fmt(e.value.delivered), style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700)),
                   ]),
-                  Text('${fmt(_net(e.value))} ${tl('EGP')}', style: const TextStyle(fontSize: 10.5, color: Color(0xFF5BC47A), fontWeight: FontWeight.w600)),
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(tl('Net profit'), style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
+                    Text('${fmt(_net(e.value))} ${tl('EGP')}', style: TextStyle(fontSize: 12, color: _net(e.value) >= 0 ? const Color(0xFF5BC47A) : Brand.red, fontWeight: FontWeight.w700)),
+                  ]),
                 ]),
               ),
             ),
@@ -174,7 +176,7 @@ class _HistorySectionState extends State<HistorySection> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '${_years ? tl('Current year') : tl('Current month')} — ${tl('numbers are up to today')} (${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}). ${tl('The period is not over yet, so they look lower.')}',
+                    '${_years ? tl('Current year') : tl('Current month')} — ${tl('numbers are up to today')} (${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}). ${_years ? tl('The year is not over yet, so numbers may look lower.') : tl('The month is not over yet, so numbers may look lower.')}',
                     style: const TextStyle(fontSize: 11.5, color: Color(0xFFFFB74D), height: 1.35),
                   ),
                 ),

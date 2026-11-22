@@ -349,6 +349,11 @@ class AppData extends ChangeNotifier {
     historyWanted = true;
     final gen = ++_histGen;
     final accs = Session.I.active;
+    if (force) {
+      historyLoading = true; // show the spinner at once when the button is pressed
+      historyError = null;
+      notifyListeners();
+    }
     SharedPreferences? p;
     try {
       p = await SharedPreferences.getInstance();
@@ -388,7 +393,7 @@ class AppData extends ChangeNotifier {
           } else {
             s.returned++;
           }
-        });
+        }).timeout(const Duration(minutes: 5));
         _hist[a.token] = m;
         _histFresh.add(a.token);
         await p?.setString('hist_${a.id}', jsonEncode({for (final e in m.entries) e.key: e.value.toJson()}));
