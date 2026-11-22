@@ -272,43 +272,44 @@ class AppData extends ChangeNotifier {
       final res = await c.send(http.Request('GET', Uri.parse(url))..headers.addAll(Api.headersFor(token))).timeout(const Duration(seconds: 90));
       final out = <Map>[];
       var tail = '', inList = false, inStr = false, esc = false, done = false;
-      var depth = 0;
+      var depth = 0, count = 0;
       final cur = StringBuffer();
       await for (final chunk in res.stream.transform(utf8.decoder)) {
+        var seg = 0; // start of the part of this chunk that belongs to the current object
         for (var i = 0; i < chunk.length && !done; i++) {
-          final ch = chunk[i];
+          final cu = chunk.codeUnitAt(i);
           if (!inList) {
-            tail += ch;
+            tail += chunk[i];
             if (tail.length > 40) tail = tail.substring(tail.length - 40);
             if (tail.endsWith('"$key":[')) inList = true;
             continue;
           }
           if (depth == 0) {
-            if (ch == '{') {
+            if (cu == 0x7B) {
               depth = 1;
               cur.clear();
-              cur.write(ch);
-            } else if (ch == ']') {
+              seg = i;
+            } else if (cu == 0x5D) {
               done = true;
             }
             continue;
           }
-          cur.write(ch);
           if (inStr) {
             if (esc) {
               esc = false;
-            } else if (ch == '\\') {
+            } else if (cu == 0x5C) {
               esc = true;
-            } else if (ch == '"') {
+            } else if (cu == 0x22) {
               inStr = false;
             }
-          } else if (ch == '"') {
+          } else if (cu == 0x22) {
             inStr = true;
-          } else if (ch == '{') {
+          } else if (cu == 0x7B) {
             depth++;
-          } else if (ch == '}') {
+          } else if (cu == 0x7D) {
             depth--;
             if (depth == 0) {
+              cur.write(chunk.substring(seg, i + 1));
               final m = jsonDecode(cur.toString()) as Map;
               if (onItem != null) {
                 onItem(m);
@@ -316,9 +317,12 @@ class AppData extends ChangeNotifier {
                 out.add(m);
               }
               if (out.length >= minItems && stopAt(m)) done = true;
+              // give the screen a chance to repaint during the long history read
+              if (++count % 400 == 0) await Future.delayed(Duration.zero);
             }
           }
         }
+        if (depth > 0 && !done) cur.write(chunk.substring(seg)); // object continues in the next chunk
         if (done) break;
       }
       return out;
