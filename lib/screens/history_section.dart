@@ -170,7 +170,7 @@ class _HistorySectionState extends State<HistorySection> {
                     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(tl('Net profit (EGP)'), style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
                       Row(children: [
-                        Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text(fmt(_net(e.value)), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: pn == null ? (_net(e.value) >= 0 ? const Color(0xFF5BC47A) : Brand.red) : _trendColor(pn))))),
+                        Text(fmt(_net(e.value)), maxLines: 1, softWrap: false, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: pn == null ? (_net(e.value) >= 0 ? const Color(0xFF5BC47A) : Brand.red) : _trendColor(pn))), // fixed size, never shrinks
                         const Spacer(),
                         _pct(pn, small: true),
                       ]),
@@ -292,8 +292,8 @@ class _HistorySectionState extends State<HistorySection> {
     final up = p >= 0;
     final c = up ? const Color(0xFF5BC47A) : Brand.red;
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      Icon(up ? Icons.arrow_upward : Icons.arrow_downward, size: small ? 11 : 14, color: c),
-      Text('${p.abs().toStringAsFixed(2)}%', style: TextStyle(color: c, fontWeight: FontWeight.w700, fontSize: small ? 10.5 : 13)),
+      Icon(up ? Icons.arrow_upward : Icons.arrow_downward, size: small ? 10 : 14, color: c),
+      Text('${p.abs().toStringAsFixed(2)}%', style: TextStyle(color: c, fontWeight: FontWeight.w700, fontSize: small ? 10 : 13)),
     ]);
   }
 
