@@ -211,8 +211,8 @@ class _HistorySectionState extends State<HistorySection> {
           const SizedBox(height: 4),
           Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Text('${cur.delivered}', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Brand.orange)),
-            const Padding(padding: EdgeInsets.fromLTRB(6, 0, 6, 6), child: Text('/', style: TextStyle(fontSize: 24, color: Brand.muted))),
-            Text('${cur.returned}', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Color(0xFFFF9800))),
+            const Padding(padding: EdgeInsets.fromLTRB(6, 0, 6, 4), child: Text('/', style: TextStyle(fontSize: 20, color: Brand.muted))),
+            Padding(padding: const EdgeInsets.only(bottom: 3), child: Text('${cur.returned}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Color(0xFFFF9800)))),
             const Spacer(),
             Padding(padding: const EdgeInsets.only(bottom: 8), child: _pct(pctCnt)),
           ]),
