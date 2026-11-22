@@ -215,16 +215,6 @@ class _HistorySectionState extends State<HistorySection> {
               ]),
             ),
           const SizedBox(height: 12),
-          Row(children: [
-            _mini('${tl('Delivered')} / ${tl('Returned')}', '', valueWidget: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text(fmt(cur.delivered), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Brand.orange)),
-              const Padding(padding: EdgeInsets.symmetric(horizontal: 5), child: Text('/', style: TextStyle(fontSize: 14, color: Brand.muted))),
-              Padding(padding: const EdgeInsets.only(bottom: 1), child: Text(fmt(cur.returned), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFFF9800)))),
-            ])),
-            const SizedBox(width: 8),
-            _mini(tl('COD collected'), '${fmt(cur.cod)} ${tl('EGP')}', pct: pctCod),
-          ]),
-          const SizedBox(height: 16),
           Text(tl('Growth curve'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
           const SizedBox(height: 10),
           _chart(tl('Shipments delivered (count)'), cnt.map((e) => e.toDouble()).toList(), keys, si, overall(cnt), (i) => '${fmt(cnt[i])} ${tl('shipments')}'),
