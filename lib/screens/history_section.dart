@@ -216,7 +216,11 @@ class _HistorySectionState extends State<HistorySection> {
             ),
           const SizedBox(height: 12),
           Row(children: [
-            _mini(tl('Returned'), '${cur.returned}', valueColor: const Color(0xFFFF9800)),
+            _mini('${tl('Delivered')} / ${tl('Returned')}', '', valueWidget: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.end, children: [
+              Text(fmt(cur.delivered), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Brand.orange)),
+              const Padding(padding: EdgeInsets.symmetric(horizontal: 5), child: Text('/', style: TextStyle(fontSize: 14, color: Brand.muted))),
+              Padding(padding: const EdgeInsets.only(bottom: 1), child: Text(fmt(cur.returned), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFFF9800)))),
+            ])),
             const SizedBox(width: 8),
             _mini(tl('COD collected'), '${fmt(cur.cod)} ${tl('EGP')}', pct: pctCod),
           ]),
@@ -298,7 +302,7 @@ class _HistorySectionState extends State<HistorySection> {
     ]);
   }
 
-  Widget _mini(String k, String v, {bool green = false, String? note, double? pct, Color? valueColor}) {
+  Widget _mini(String k, String v, {bool green = false, String? note, double? pct, Color? valueColor, Widget? valueWidget}) {
     // growth = green, decline = red: the box and the figure take the colour of the arrow
     final Color? c = pct == null ? null : (pct >= 0 ? const Color(0xFF5BC47A) : Brand.red);
     return Expanded(
@@ -307,7 +311,7 @@ class _HistorySectionState extends State<HistorySection> {
           decoration: BoxDecoration(color: c == null ? Brand.card2 : c.withOpacity(.16), borderRadius: BorderRadius.circular(12)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(k, style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
-            Text(v, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: c ?? valueColor)),
+            valueWidget ?? Text(v, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: c ?? valueColor)),
             if (pct != null) Padding(padding: const EdgeInsets.only(top: 2), child: _pct(pct)),
             if (note != null) Text(note, style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
           ]),
