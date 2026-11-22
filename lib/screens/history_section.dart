@@ -193,14 +193,9 @@ class _HistorySectionState extends State<HistorySection> {
           boxShadow: const [BoxShadow(color: Color(0xAA000000), blurRadius: 16, offset: Offset(0, 6))],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(_label(sel, full: true), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Brand.orange, letterSpacing: .3)),
-            if (si > 0) Text('% ${_years ? tl('vs previous year') : tl('vs previous month')}${_isCurrent(sel) ? ' *' : ''}', style: const TextStyle(color: Brand.muted, fontSize: 10.5)),
-          ]),
-          Container(height: 2, margin: const EdgeInsets.only(top: 8, bottom: 2), decoration: BoxDecoration(borderRadius: BorderRadius.circular(2), gradient: const LinearGradient(colors: [Brand.orange, Color(0x00E2964E)]))),
           if (_isCurrent(sel))
             Container(
-              margin: const EdgeInsets.only(top: 8),
+              margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(color: const Color(0x22FFB74D), borderRadius: BorderRadius.circular(12)),
               child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -214,9 +209,6 @@ class _HistorySectionState extends State<HistorySection> {
                 ),
               ]),
             ),
-          const SizedBox(height: 12),
-          Text(tl('Growth curve'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 10),
           _chart(tl('Shipments delivered (count)'), cnt.map((e) => e.toDouble()).toList(), keys, si, overall(cnt), (i) => '${fmt(cnt[i])} ${tl('shipments')}'),
           const SizedBox(height: 14),
           _chart(tl('Net profit (EGP)'), net.map((e) => e.toDouble()).toList(), keys, si, overall(net), (i) => '${fmt(net[i])} ${tl('EGP')}'),
