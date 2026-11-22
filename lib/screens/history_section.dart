@@ -185,7 +185,7 @@ class _HistorySectionState extends State<HistorySection> {
       // chosen period
       Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: _tint(pctCnt, pctNet), borderRadius: BorderRadius.circular(18)),
+        decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(18)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(_label(sel, full: true), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Brand.orange, letterSpacing: .3)),
