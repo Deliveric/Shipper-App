@@ -158,7 +158,7 @@ class _HistorySectionState extends State<HistorySection> {
                     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(tl('Net profit'), style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
                       Row(children: [
-                        Flexible(child: Text('${fmt(_net(e.value))} ${tl('EGP')}', overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: pn == null ? (_net(e.value) >= 0 ? const Color(0xFF5BC47A) : Brand.red) : _trendColor(pn)))),
+                        Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text('${fmt(_net(e.value))} ${tl('EGP')}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: pn == null ? (_net(e.value) >= 0 ? const Color(0xFF5BC47A) : Brand.red) : _trendColor(pn))))),
                         const Spacer(),
                         _pct(pn),
                       ]),
@@ -281,7 +281,7 @@ class _HistorySectionState extends State<HistorySection> {
     final c = up ? const Color(0xFF5BC47A) : Brand.red;
     return Row(mainAxisSize: MainAxisSize.min, children: [
       Icon(up ? Icons.arrow_upward : Icons.arrow_downward, size: 14, color: c),
-      Text('${p.abs().toStringAsFixed(0)}%', style: TextStyle(color: c, fontWeight: FontWeight.w700, fontSize: 13)),
+      Text('${p.abs() < 1 ? p.abs().toStringAsFixed(1) : p.abs().toStringAsFixed(0)}%', style: TextStyle(color: c, fontWeight: FontWeight.w700, fontSize: 13)),
     ]);
   }
 
