@@ -95,6 +95,7 @@ const _ar = <String, String>{
   'The year is not over yet, so numbers may look lower.': 'السنة لسه ما خلصتش فالأرقام ممكن تبان أقل.',
   'The month is not over yet, so numbers may look lower.': 'الشهر لسه ما خلصش فالأرقام ممكن تبان أقل.',
   'Shipments': 'الشحنات',
+  'Shipments delivered': 'الشحنات المسلّمة',
   'Net profit': 'صافي الربح',
   'Net profit (EGP)': 'صافي الربح (جنيه)',
   'COD − shipping fees': 'التحصيل − مصاريف الشحن',

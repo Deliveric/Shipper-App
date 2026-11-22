@@ -144,7 +144,7 @@ class _HistorySectionState extends State<HistorySection> {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                   Text(_isCurrent(e.key) ? '${_label(e.key)} *' : _label(e.key), style: TextStyle(fontSize: 12, color: e.key == sel ? Brand.orange : Brand.muted, fontWeight: FontWeight.w600)),
                   Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(tl('Shipments'), style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
+                    Text(tl('Shipments delivered'), style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
                     Text(fmt(e.value.delivered), style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700)),
                   ]),
                   Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
