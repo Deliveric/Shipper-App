@@ -200,7 +200,7 @@ class _HistorySectionState extends State<HistorySection> {
           Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Text('${cur.delivered}', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Brand.orange)),
             const Padding(padding: EdgeInsets.fromLTRB(6, 0, 6, 6), child: Text('/', style: TextStyle(fontSize: 24, color: Brand.muted))),
-            Text('${cur.returned}', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Brand.red)),
+            Text('${cur.returned}', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Color(0xFFFF9800))),
             const Spacer(),
             Padding(padding: const EdgeInsets.only(bottom: 8), child: _pct(pctCnt)),
           ]),
@@ -281,7 +281,7 @@ class _HistorySectionState extends State<HistorySection> {
     final c = up ? const Color(0xFF5BC47A) : Brand.red;
     return Row(mainAxisSize: MainAxisSize.min, children: [
       Icon(up ? Icons.arrow_upward : Icons.arrow_downward, size: 14, color: c),
-      Text('${p.abs().toStringAsFixed(1)}%', style: TextStyle(color: c, fontWeight: FontWeight.w700, fontSize: 13)),
+      Text('${p.abs().toStringAsFixed(2)}%', style: TextStyle(color: c, fontWeight: FontWeight.w700, fontSize: 13)),
     ]);
   }
 
@@ -290,7 +290,7 @@ class _HistorySectionState extends State<HistorySection> {
     final c = up ? const Color(0xFF5BC47A) : Brand.red;
     return Row(mainAxisSize: MainAxisSize.min, children: [
       Icon(up ? Icons.arrow_upward : Icons.arrow_downward, size: 14, color: c),
-      Text('${pct.abs().toStringAsFixed(1)}%', style: TextStyle(color: c, fontWeight: FontWeight.w700, fontSize: 12.5)),
+      Text('${pct.abs().toStringAsFixed(2)}%', style: TextStyle(color: c, fontWeight: FontWeight.w700, fontSize: 12.5)),
       const SizedBox(width: 4),
       Flexible(child: Text(sub, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Brand.muted, fontSize: 10.5))),
     ]);
