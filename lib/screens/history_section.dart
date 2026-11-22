@@ -45,7 +45,7 @@ class _HistorySectionState extends State<HistorySection> {
   void _follow(int ri) {
     if (!_scroll.hasClients) return;
     final pos = _scroll.position;
-    final target = (ri * 150.0 - (pos.viewportDimension / 2 - 56)).clamp(0.0, pos.maxScrollExtent);
+    final target = (ri * 184.0 - (pos.viewportDimension / 2 - 88)).clamp(0.0, pos.maxScrollExtent);
     _scroll.animateTo(target, duration: const Duration(milliseconds: 140), curve: Curves.easeOut);
   }
 
@@ -124,7 +124,7 @@ class _HistorySectionState extends State<HistorySection> {
       const SizedBox(height: 8),
       // slider of periods, newest first
       SizedBox(
-        height: 112,
+        height: 124,
         child: ListView(controller: _scroll, scrollDirection: Axis.horizontal, children: [
           for (final e in ps.reversed)
             GestureDetector(
@@ -133,25 +133,38 @@ class _HistorySectionState extends State<HistorySection> {
                 _follow(ps.length - 1 - keys.indexOf(e.key));
               },
               child: Container(
-                width: 142,
+                width: 176,
                 margin: const EdgeInsets.only(right: 8),
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                 decoration: BoxDecoration(
-                  color: Brand.card,
+                  // the card takes the colour of the net profit trend (green = growth, red = decline)
+                  color: _tint(chg(net, keys.indexOf(e.key))),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: e.key == sel ? Brand.orange : Colors.transparent, width: 1.6),
                 ),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Text(_isCurrent(e.key) ? '${_label(e.key)} *' : _label(e.key), style: TextStyle(fontSize: 12, color: e.key == sel ? Brand.orange : Brand.muted, fontWeight: FontWeight.w600)),
-                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(tl('Shipments delivered'), style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
-                    Text(fmt(e.value.delivered), style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700)),
-                  ]),
-                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(tl('Net profit'), style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
-                    Text('${fmt(_net(e.value))} ${tl('EGP')}', style: TextStyle(fontSize: 12, color: _net(e.value) >= 0 ? const Color(0xFF5BC47A) : Brand.red, fontWeight: FontWeight.w700)),
-                  ]),
-                ]),
+                child: Builder(builder: (context) {
+                  final ix = keys.indexOf(e.key);
+                  final pc = chg(cnt, ix), pn = chg(net, ix);
+                  return Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    Text(_isCurrent(e.key) ? '${_label(e.key)} *' : _label(e.key), style: TextStyle(fontSize: 15, color: e.key == sel ? Brand.orange : Brand.muted, fontWeight: FontWeight.w800)),
+                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(tl('Shipments delivered'), style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
+                      Row(children: [
+                        Text(fmt(e.value.delivered), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _trendColor(pc))),
+                        const Spacer(),
+                        _pct(pc),
+                      ]),
+                    ]),
+                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(tl('Net profit'), style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
+                      Row(children: [
+                        Flexible(child: Text('${fmt(_net(e.value))} ${tl('EGP')}', overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: pn == null ? (_net(e.value) >= 0 ? const Color(0xFF5BC47A) : Brand.red) : _trendColor(pn)))),
+                        const Spacer(),
+                        _pct(pn),
+                      ]),
+                    ]),
+                  ]);
+                }),
               ),
             ),
         ]),
@@ -163,9 +176,10 @@ class _HistorySectionState extends State<HistorySection> {
         decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(18)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(_label(sel, full: true).toUpperCase(), style: const TextStyle(fontSize: 12, color: Brand.muted, letterSpacing: .8)),
+            Text(_label(sel, full: true), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Brand.orange, letterSpacing: .3)),
             if (si > 0) Text('% ${_years ? tl('vs previous year') : tl('vs previous month')}${_isCurrent(sel) ? ' *' : ''}', style: const TextStyle(color: Brand.muted, fontSize: 10.5)),
           ]),
+          Container(height: 2, margin: const EdgeInsets.only(top: 8, bottom: 2), decoration: BoxDecoration(borderRadius: BorderRadius.circular(2), gradient: const LinearGradient(colors: [Brand.orange, Color(0x00E2964E)]))),
           if (_isCurrent(sel))
             Container(
               margin: const EdgeInsets.only(top: 8),
@@ -248,6 +262,11 @@ class _HistorySectionState extends State<HistorySection> {
       }),
     ]);
   }
+
+  Color? _trendColor(double? p) => p == null ? null : (p >= 0 ? const Color(0xFF5BC47A) : Brand.red);
+
+  /// card background: dark card mixed with green / red
+  Color _tint(double? p) => p == null ? Brand.card : Color.alphaBlend(_trendColor(p)!.withOpacity(.16), Brand.card);
 
   /// small arrow + percentage versus the previous period
   Widget _pct(double? p) {
