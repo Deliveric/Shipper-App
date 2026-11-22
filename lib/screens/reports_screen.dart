@@ -34,8 +34,7 @@ class ReportsScreen extends StatelessWidget {
           body: RefreshIndicator(
             color: Brand.orange,
             onRefresh: () async {
-              await d.refresh();
-              await d.loadHistory(force: true);
+              await d.reloadAll();
             },
             child: ListView(padding: const EdgeInsets.fromLTRB(14, 6, 14, 110), children: [
               if (d.loading) const LinearProgressIndicator(color: Brand.orange, minHeight: 3),

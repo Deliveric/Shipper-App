@@ -349,6 +349,15 @@ class AppData extends ChangeNotifier {
     return out;
   }
 
+  /// same as pulling the Stats screen down: reload everything and the whole history
+  Future<void> reloadAll() async {
+    historyLoading = true;
+    historyError = null;
+    notifyListeners();
+    await refresh();
+    await loadHistory(force: true);
+  }
+
   Future<void> loadHistory({bool force = false}) async {
     historyWanted = true;
     final gen = ++_histGen;

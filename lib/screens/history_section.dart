@@ -80,7 +80,7 @@ class _HistorySectionState extends State<HistorySection> {
             const SizedBox(height: 12),
             FilledButton.icon(
               style: FilledButton.styleFrom(backgroundColor: Brand.orange, foregroundColor: Brand.dark),
-              onPressed: () => d.loadHistory(force: true),
+              onPressed: () => d.reloadAll(),
               icon: const Icon(Icons.download),
               label: Text(tl('Load history')),
             ),
