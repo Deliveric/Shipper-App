@@ -51,7 +51,7 @@ class _HistorySectionState extends State<HistorySection> {
   void _follow(int ri) {
     if (!_scroll.hasClients) return;
     final pos = _scroll.position;
-    final target = (ri * 184.0 - (pos.viewportDimension / 2 - 88)).clamp(0.0, pos.maxScrollExtent);
+    final target = (ri * 204.0 - (pos.viewportDimension / 2 - 98)).clamp(0.0, pos.maxScrollExtent);
     _scroll.animateTo(target, duration: const Duration(milliseconds: 140), curve: Curves.easeOut);
   }
 
@@ -145,7 +145,7 @@ class _HistorySectionState extends State<HistorySection> {
                 _follow(keys.indexOf(e.key));
               },
               child: Container(
-                width: 176,
+                width: 196,
                 margin: const EdgeInsets.only(right: 8),
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                 decoration: BoxDecoration(
@@ -164,15 +164,15 @@ class _HistorySectionState extends State<HistorySection> {
                       Row(children: [
                         Text(fmt(e.value.delivered), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _trendColor(pc))),
                         const Spacer(),
-                        _pct(pc),
+                        _pct(pc, small: true),
                       ]),
                     ]),
                     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(tl('Net profit'), style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
+                      Text(tl('Net profit (EGP)'), style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
                       Row(children: [
-                        Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text('${fmt(_net(e.value))} ${tl('EGP')}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: pn == null ? (_net(e.value) >= 0 ? const Color(0xFF5BC47A) : Brand.red) : _trendColor(pn))))),
+                        Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text(fmt(_net(e.value)), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: pn == null ? (_net(e.value) >= 0 ? const Color(0xFF5BC47A) : Brand.red) : _trendColor(pn))))),
                         const Spacer(),
-                        _pct(pn),
+                        _pct(pn, small: true),
                       ]),
                     ]),
                   ]);
@@ -287,13 +287,13 @@ class _HistorySectionState extends State<HistorySection> {
   }
 
   /// small arrow + percentage versus the previous period
-  Widget _pct(double? p) {
+  Widget _pct(double? p, {bool small = false}) {
     if (p == null) return const SizedBox.shrink();
     final up = p >= 0;
     final c = up ? const Color(0xFF5BC47A) : Brand.red;
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      Icon(up ? Icons.arrow_upward : Icons.arrow_downward, size: 14, color: c),
-      Text('${p.abs().toStringAsFixed(2)}%', style: TextStyle(color: c, fontWeight: FontWeight.w700, fontSize: 13)),
+      Icon(up ? Icons.arrow_upward : Icons.arrow_downward, size: small ? 11 : 14, color: c),
+      Text('${p.abs().toStringAsFixed(2)}%', style: TextStyle(color: c, fontWeight: FontWeight.w700, fontSize: small ? 10.5 : 13)),
     ]);
   }
 
