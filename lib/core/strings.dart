@@ -88,6 +88,8 @@ String tr(BuildContext c, String key) {
 
 /// English text -> Arabic. Screens call t('English text'); English stays as is.
 const _ar = <String, String>{
+  'Overall performance': 'الأداء العام',
+  'Month by month and year by year history': 'سجل الأداء شهر بشهر وسنة بسنة',
   'Load history': 'تحميل السجل',
   'Current month': 'الشهر الحالي',
   'Current year': 'السنة الحالية',

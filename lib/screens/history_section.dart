@@ -181,11 +181,17 @@ class _HistorySectionState extends State<HistorySection> {
             ),
         ]),
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: 18),
       // chosen period
       Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(18)),
+        decoration: BoxDecoration(
+          // darker than the period cards above, with a thin frame and a soft shadow, so it reads as its own card
+          color: const Color(0xFF16160F),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0x55E2964E), width: 1.2),
+          boxShadow: const [BoxShadow(color: Color(0xAA000000), blurRadius: 16, offset: Offset(0, 6))],
+        ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(_label(sel, full: true), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Brand.orange, letterSpacing: .3)),

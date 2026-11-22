@@ -79,7 +79,17 @@ class ReportsScreen extends StatelessWidget {
                   ]),
                 ),
               ),
-              _sec(tl('Months')),
+              // separate block: its own header with a divider, away from "Last 7 days"
+              const SizedBox(height: 26),
+              Container(height: 1, color: const Color(0x33FFFFFF)),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(2, 18, 2, 4),
+                child: Text(tl('Overall performance'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Brand.orange)),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(2, 0, 2, 12),
+                child: Text(tl('Month by month and year by year history'), style: const TextStyle(fontSize: 11.5, color: Brand.muted)),
+              ),
               const HistorySection(),
             ]),
           ),
