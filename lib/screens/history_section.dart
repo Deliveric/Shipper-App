@@ -16,6 +16,12 @@ class _HistorySectionState extends State<HistorySection> {
   bool _years = false;
   String? _sel; // selected period key
   final _scroll = ScrollController();
+  int _lastLen = -1;
+
+  /// start at the newest period (right end), as the curve does
+  void _toEnd() => WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scroll.hasClients) _scroll.jumpTo(_scroll.position.maxScrollExtent);
+      });
 
   static const _mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -83,6 +89,10 @@ class _HistorySectionState extends State<HistorySection> {
       );
     }
     final keys = ps.map((e) => e.key).toList();
+    if (ps.length != _lastLen) {
+      _lastLen = ps.length;
+      _toEnd();
+    }
     final sel = (_sel != null && keys.contains(_sel)) ? _sel! : keys.last;
     final si = keys.indexOf(sel);
     final cnt = ps.map((e) => e.value.delivered).toList();
@@ -114,23 +124,25 @@ class _HistorySectionState extends State<HistorySection> {
           seg(tl('Months'), !_years, () => setState(() {
                 _years = false;
                 _sel = null;
+                _lastLen = -1;
               })),
           seg(tl('Years'), _years, () => setState(() {
                 _years = true;
                 _sel = null;
+                _lastLen = -1;
               })),
         ]),
       ),
       const SizedBox(height: 8),
-      // slider of periods, newest first
+      // slider of periods, oldest on the left (same direction as the curves)
       SizedBox(
         height: 124,
         child: ListView(controller: _scroll, scrollDirection: Axis.horizontal, children: [
-          for (final e in ps.reversed)
+          for (final e in ps)
             GestureDetector(
               onTap: () {
                 setState(() => _sel = e.key);
-                _follow(ps.length - 1 - keys.indexOf(e.key));
+                _follow(keys.indexOf(e.key));
               },
               child: Container(
                 width: 176,
@@ -246,7 +258,7 @@ class _HistorySectionState extends State<HistorySection> {
           final n = keys.length;
           final i = n == 1 ? 0 : (((dx - 6) / (c.maxWidth - 12)) * (n - 1)).round().clamp(0, n - 1);
           setState(() => _sel = keys[i]);
-          _follow(n - 1 - i); // the slider (newest first) moves with the curves
+          _follow(i); // the slider (oldest on the left, like the curves) moves with them
         }
 
         return GestureDetector(
