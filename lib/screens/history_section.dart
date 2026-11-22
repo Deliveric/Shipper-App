@@ -137,8 +137,8 @@ class _HistorySectionState extends State<HistorySection> {
                 margin: const EdgeInsets.only(right: 8),
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                 decoration: BoxDecoration(
-                  // the card takes the colour of the net profit trend (green = growth, red = decline)
-                  color: _tint(chg(net, keys.indexOf(e.key))),
+                  // green = both up, red = both down, amber = mixed
+                  color: _tint(chg(cnt, keys.indexOf(e.key)), chg(net, keys.indexOf(e.key))),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: e.key == sel ? Brand.orange : Colors.transparent, width: 1.6),
                 ),
@@ -173,7 +173,7 @@ class _HistorySectionState extends State<HistorySection> {
       // chosen period
       Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(18)),
+        decoration: BoxDecoration(color: _tint(pctCnt, pctNet), borderRadius: BorderRadius.circular(18)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(_label(sel, full: true), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Brand.orange, letterSpacing: .3)),
@@ -265,8 +265,14 @@ class _HistorySectionState extends State<HistorySection> {
 
   Color? _trendColor(double? p) => p == null ? null : (p >= 0 ? const Color(0xFF5BC47A) : Brand.red);
 
-  /// card background: dark card mixed with green / red
-  Color _tint(double? p) => p == null ? Brand.card : Color.alphaBlend(_trendColor(p)!.withOpacity(.16), Brand.card);
+  /// card background from the shipments and the net profit trends:
+  /// both up = green, both down = red, one up and one down = amber
+  Color _tint(double? a, double? b) {
+    final l = [a, b].whereType<double>().toList();
+    if (l.isEmpty) return Brand.card;
+    final c = l.every((x) => x >= 0) ? const Color(0xFF5BC47A) : (l.every((x) => x < 0) ? Brand.red : const Color(0xFFFFB74D));
+    return Color.alphaBlend(c.withOpacity(.16), Brand.card);
+  }
 
   /// small arrow + percentage versus the previous period
   Widget _pct(double? p) {
