@@ -214,29 +214,13 @@ class _HistorySectionState extends State<HistorySection> {
                 ),
               ]),
             ),
-          const SizedBox(height: 4),
-          Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text('${cur.delivered}', style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Brand.orange)),
-            const Padding(padding: EdgeInsets.fromLTRB(6, 0, 6, 4), child: Text('/', style: TextStyle(fontSize: 20, color: Brand.muted))),
-            Padding(padding: const EdgeInsets.only(bottom: 3), child: Text('${cur.returned}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Color(0xFFFF9800)))),
-            const Spacer(),
-            Padding(padding: const EdgeInsets.only(bottom: 8), child: _pct(pctCnt)),
-          ]),
-          Text('${tl('Delivered')} / ${tl('Returned')} (${tl('shipments')})', style: const TextStyle(color: Brand.muted, fontSize: 12)),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(children: [
-            _mini(tl('COD collected'), '${fmt(cur.cod)} ${tl('EGP')}', pct: pctCod),
+            _mini(tl('Returned'), '${cur.returned}', valueColor: const Color(0xFFFF9800)),
             const SizedBox(width: 8),
-            _mini(tl('Net profit'), '${fmt(_net(cur))} ${tl('EGP')}', green: true, note: tl('COD − shipping fees'), pct: pctNet),
+            _mini(tl('COD collected'), '${fmt(cur.cod)} ${tl('EGP')}', pct: pctCod),
           ]),
-        ]),
-      ),
-      const SizedBox(height: 12),
-      // curve
-      Container(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
-        decoration: BoxDecoration(color: Brand.card, borderRadius: BorderRadius.circular(18)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const SizedBox(height: 16),
           Text(tl('Growth curve'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
           const SizedBox(height: 10),
           _chart(tl('Shipments delivered (count)'), cnt.map((e) => e.toDouble()).toList(), keys, si, overall(cnt), (i) => '${fmt(cnt[i])} ${tl('shipments')}'),
@@ -314,7 +298,7 @@ class _HistorySectionState extends State<HistorySection> {
     ]);
   }
 
-  Widget _mini(String k, String v, {bool green = false, String? note, double? pct}) {
+  Widget _mini(String k, String v, {bool green = false, String? note, double? pct, Color? valueColor}) {
     // growth = green, decline = red: the box and the figure take the colour of the arrow
     final Color? c = pct == null ? null : (pct >= 0 ? const Color(0xFF5BC47A) : Brand.red);
     return Expanded(
@@ -323,7 +307,7 @@ class _HistorySectionState extends State<HistorySection> {
           decoration: BoxDecoration(color: c == null ? Brand.card2 : c.withOpacity(.16), borderRadius: BorderRadius.circular(12)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(k, style: const TextStyle(fontSize: 10.5, color: Brand.muted)),
-            Text(v, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: c)),
+            Text(v, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: c ?? valueColor)),
             if (pct != null) Padding(padding: const EdgeInsets.only(top: 2), child: _pct(pct)),
             if (note != null) Text(note, style: const TextStyle(fontSize: 9.5, color: Brand.muted)),
           ]),
